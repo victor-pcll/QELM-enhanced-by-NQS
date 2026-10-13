@@ -14,3 +14,5 @@ class IsingModel(HamiltonianModel):
     """
 
     name = "ising"
+
+    

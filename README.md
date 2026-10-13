@@ -81,3 +81,4 @@ Ruff formats and lints. Mypy typechecks the package and `main.py`. At startup, `
 ## Develop
 
 Package code lives in `src/qrc_env_template`. Import it as `qrc_env_template`. Add a dependency with `uv add`.
+# QRC-enhanced-by-NQS

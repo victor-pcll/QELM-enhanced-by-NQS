@@ -1,6 +1,6 @@
-# qrc-env-template
+# QRC-enhanced-by-NQS
 
-A Python library managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.12 or newer.
+Neural quantum states (NetKet 3) as a probe for quantum reservoir computing (QRC) and quantum extreme learning machines (QELM). The library is `QRC.NQS`, managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.12 or newer.
 
 Longer notes are in [`documentation/`](documentation/README.md): setup, Hydra and `.env`, the project layout, checkpoints, and code quality.
 
@@ -22,13 +22,17 @@ uv sync
 
 | Path | Role |
 | --- | --- |
-| `conf/` | Hydra YAML: `config.yaml` plus groups `sim_type`, `training`, `evaluation` |
+| `conf/` | Hydra YAML: `config.yaml` plus groups `sim_type`, `nqs`, `training`, `evaluation` |
 | `data/` | Local time series and training datasets (gitignored) |
-| `src/qrc_env_template/models/` | Hamiltonians and time evolution (Ising, Kitaev scaffolds) |
-| `src/qrc_env_template/training/` | Training algorithms (Readout, Ridge scaffolds) |
-| `src/qrc_env_template/evaluation/` | Metrics and plot scaffolds |
+| `src/QRC/NQS/models/` | Hamiltonians (Ising via NetKet, Kitaev scaffold) and time evolution |
+| `src/QRC/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
+| `src/QRC/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
+| `src/QRC/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
+| `src/QRC/NQS/evaluation/` | Metrics and plot scaffolds |
+| `notebooks/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
 | `notebooks/series.ipynb` | Plot a local series from `data/`; the library call stays a scaffold |
-| `main.py` | Entrypoint. Routes sim type → model → training → evaluation |
+| `main.py` | Entrypoint. Routes sim type → model → training → evaluation → NetKet setup |
+| `outputs/` | Hydra runs, `outputs/<experiment_name>/<timestamp>/{exp,logs,plots}` (gitignored) |
 
 ## Run the pipeline
 
@@ -57,7 +61,7 @@ The notebook reads `data/series.npy` (a 1D or 2D numeric array) and, when that f
 
 Code is committed. Large data is not. `.gitignore` excludes `data/`, `outputs/`, and `wandb/`, plus payload formats such as `*.h5`, `*.csv`, and `*.npy`. Create `data/` locally for datasets; that folder is not committed.
 
-Each run saves a checkpoint at the end of training. `uv run python main.py` writes it in Hydra's timestamped directory from `hydra.run.dir`: `outputs/<YYYY-MM-DD>/<HH-MM-SS>/checkpoint.npz`. Without a Hydra job, the file is `<checkpoint.fallback_root>/<uuid>/checkpoint.npz` (`outputs/<uuid>/checkpoint.npz` by default). Set `checkpoint.dir` to choose the directory, and `checkpoint.use_uuid=true` to nest a UUID under it.
+Each run saves a checkpoint at the end of training. `uv run python main.py experiment_name=<name>` writes every run to `outputs/<name>/<YYYY-MM-DD_HH-MM-SS>/`, with raw data in `exp/` (`checkpoint.npz`, `nqs_variables.msgpack`), the log in `logs/` and figures in `plots/`. Without a Hydra job, the file is `<checkpoint.fallback_root>/<uuid>/checkpoint.npz` (`outputs/<uuid>/checkpoint.npz` by default). Set `checkpoint.dir` to choose the directory, and `checkpoint.use_uuid=true` to nest a UUID under it.
 
 DVC can be added later if large HDF5 or CSV files need strict versioning.
 
@@ -80,5 +84,4 @@ Ruff formats and lints. Mypy typechecks the package and `main.py`. At startup, `
 
 ## Develop
 
-Package code lives in `src/qrc_env_template`. Import it as `qrc_env_template`. Add a dependency with `uv add`.
-# QRC-enhanced-by-NQS
+Package code lives in `src/QRC/NQS`. Import it as `QRC.NQS`. Add a dependency with `uv add`.

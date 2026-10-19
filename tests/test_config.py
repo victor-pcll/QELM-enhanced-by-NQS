@@ -7,8 +7,8 @@ import numpy as np
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
-from qrc_env_template.seed import set_seed
-from qrc_env_template.selection import format_selection
+from QRC.NQS.seed import set_seed
+from QRC.NQS.selection import format_selection
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "conf"
@@ -43,7 +43,7 @@ def test_config_loads_and_cli_overrides_apply() -> None:
     default = _compose()
     chosen = _compose(OVERRIDES)
 
-    assert set(chosen.ising.keys()) == {"N", "J", "learning_rate"}
+    assert set(chosen.ising.keys()) == {"N", "J", "h", "pbc", "learning_rate"}
     assert set(chosen.test.keys()) == {"dt", "n_steps"}
     assert chosen.sim_type == "ising"
     assert chosen.ising.N == 12
@@ -79,4 +79,6 @@ def test_main_cli_override(tmp_path: Path) -> None:
     assert result.returncode == 0, result.stderr
     assert "ising.N=12" in result.stdout
     assert "test.dt=0.05" in result.stdout
-    assert (tmp_path / "checkpoint.npz").is_file()
+    assert (tmp_path / "exp" / "checkpoint.npz").is_file()
+    assert (tmp_path / "exp" / "nqs_variables.msgpack").is_file()
+    assert (tmp_path / "logs" / "main.log").is_file()

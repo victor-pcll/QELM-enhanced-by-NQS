@@ -1,0 +1,11 @@
+# Variational ansatz built with NetKet 3.
+# The physical system (N, J, h, pbc) comes from the sim_type block.
+model: rbm
+# Hidden-unit density: M = alpha * N hidden units.
+alpha: 1
+# complex parameters are needed for real-time (TDVP) dynamics.
+param_dtype: complex
+# full_sum: exact sums over the 2^N basis states (small N only).
+# mc: Metropolis sampling with n_samples samples.
+state: full_sum
+n_samples: 1024

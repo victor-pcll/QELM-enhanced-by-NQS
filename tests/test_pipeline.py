@@ -3,10 +3,10 @@ from pathlib import Path
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
-from qrc_env_template.evaluation import evaluate
-from qrc_env_template.models import IsingModel, KitaevModel
-from qrc_env_template.pipeline import resolve_pipeline, run_pipeline
-from qrc_env_template.training import Readout, RidgeRegression
+from QRC.NQS.evaluation import evaluate
+from QRC.NQS.models import IsingModel, KitaevModel
+from QRC.NQS.pipeline import resolve_pipeline, run_pipeline
+from QRC.NQS.training import Readout, RidgeRegression
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "conf"
@@ -58,6 +58,17 @@ def test_run_pipeline_uses_cli_overrides(tmp_path: Path) -> None:
     assert "training=readout" in report
     assert "dt=0.05" in report
     assert "status=scaffold" in report
+    assert "nqs=RBM" in report
+    assert "hilbert_dim=4096" in report
+    assert (tmp_path / "nqs_variables.msgpack").is_file()
     checkpoint = tmp_path / "checkpoint.npz"
     assert checkpoint.is_file()
     assert f"checkpoint={checkpoint}" in report
+
+
+def test_run_pipeline_without_netket_system_reports_unavailable(
+    tmp_path: Path,
+) -> None:
+    report = run_pipeline(_compose(["sim_type=kitaev", f"checkpoint.dir={tmp_path}"]))
+    assert "nqs=unavailable" in report
+    assert (tmp_path / "checkpoint.npz").is_file()

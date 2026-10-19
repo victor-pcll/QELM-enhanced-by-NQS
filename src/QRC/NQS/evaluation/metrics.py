@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import numpy as np
+from numpy.typing import ArrayLike
+
 
 def metric_status(names: list[str]) -> str:
     """Report which metrics a run would compute.
@@ -15,7 +18,8 @@ def metric_status(names: list[str]) -> str:
     """
     return "metrics=" + ",".join(names) + " status=scaffold"
 
-def NMSE(y_true, y_pred):
+
+def NMSE(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Normalized Mean Squared Error (NMSE) metric.
 
     Args:
@@ -26,10 +30,11 @@ def NMSE(y_true, y_pred):
         NMSE score.
     """
     mse = MSE(y_true, y_pred)
-    norm = (y_true ** 2).mean()
+    norm = float((np.abs(np.asarray(y_true)) ** 2).mean())
     return mse / norm
 
-def MSE(y_true, y_pred):
+
+def MSE(y_true: ArrayLike, y_pred: ArrayLike) -> float:
     """Mean Squared Error (MSE) metric.
 
     Args:
@@ -39,4 +44,5 @@ def MSE(y_true, y_pred):
     Returns:
         MSE score.
     """
-    return ((y_true - y_pred) ** 2).mean()
+    diff = np.asarray(y_true) - np.asarray(y_pred)
+    return float((np.abs(diff) ** 2).mean())

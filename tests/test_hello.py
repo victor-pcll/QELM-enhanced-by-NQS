@@ -1,5 +1,5 @@
-from qrc_env_template import hello
+from QRC.NQS import hello
 
 
 def test_hello() -> None:
-    assert hello() == "Hello from qrc-env-template!"
+    assert hello() == "Hello from QRC.NQS!"

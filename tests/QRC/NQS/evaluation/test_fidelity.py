@@ -109,7 +109,11 @@ def test_real_direction_matches_infidelity(setup) -> None:
 
 
 def test_complex_direction_needs_the_berry_term(setup) -> None:
-    """For complex v, v^† S v (not v^† Re[S] v) is the infidelity."""
+    """For complex v, v^† S v (not v^† Re[S] v) is the infidelity.
+
+    Guards the default of compute_fidelity_susceptibility: replacing S by
+    Re[S] there makes this test fail (gap above 5 %).
+    """
     state, S = setup
     _, v = _random_directions(S.shape[0], 12)
     measured = _infidelity_per_eps2(state, v, 1e-4)

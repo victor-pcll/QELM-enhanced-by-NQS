@@ -13,6 +13,14 @@ so for a real direction ``chi_F = v^T g v`` with ``g = Re S`` the
 Fubini-Study metric, while a complex direction also picks up the Berry
 curvature term ``y^T Omega x``. ``chi_F`` peaks at quantum phase
 transitions when ``v`` follows a physical parameter.
+
+Why the default is ``v^† S v`` and not ``v^† Re[S] v``: with complex
+parameters (the complex RBM) the directions that matter in practice, such
+as the TDVP velocity ``-i S^+ F``, are complex. For them ``v^† Re[S] v``
+drops the Berry term and is no longer the infidelity;
+``test_complex_direction_needs_the_berry_term`` measures a gap above 5 %
+against the exact overlap. Do not replace ``S`` by ``Re S`` in the default
+path: ``metric_only=True`` already gives that quantity.
 """
 
 from __future__ import annotations
@@ -56,10 +64,14 @@ def compute_fidelity_susceptibility(
             NetKet QGT operator).
         v: Direction in parameter space: a vector of length ``P`` or a
             parameter PyTree (VMC gradient, TDVP update).
-        metric_only: When ``True``, return ``v^† g v`` with ``g = Re S``
-            only. It equals the default for real ``v``; for complex ``v`` it
-            drops the Berry-curvature term and no longer matches the
-            infidelity.
+        metric_only: By default (``False``) the full tensor is used, so
+            ``chi_F = v^† S v`` includes the Berry-curvature term
+            ``y^T Omega x`` and equals the infidelity for any complex
+            ``v = x + i y``. When ``True``, return ``v^† g v`` with
+            ``g = Re S`` (the Fubini-Study metric alone). Use it only to
+            inspect the metric part: it equals the default for real ``v``,
+            but for complex ``v`` it drops the Berry term and no longer
+            matches the infidelity.
 
     Returns:
         ``chi_F >= 0`` (exactly ``0.0`` for ``v = 0``). It scales as

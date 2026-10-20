@@ -71,9 +71,29 @@ def test_default_directory_is_a_fresh_run_outside_hydra(
     monkeypatch.chdir(tmp_path)
     t = np.arange(3.0)
     path = makeplots.plot_time_series(t, {"x": t}, filename="a.png")
-    # outputs/default/<uuid>/plots/a.png, next to logs/ of the same run.
+    # outputs/default/<timestamp>_<id>/plots/a.png, next to logs/ of the same run.
     assert path.parts[:2] == ("outputs", "default")
     assert (tmp_path / path).is_file()
     assert path.parent.name == "plots"
     assert (path.parent.parent / "logs").is_dir()
     assert _is_png(path)
+
+
+def test_plot_exact_vs_tdvp(tmp_path: Path) -> None:
+    t = np.linspace(0.0, 1.0, 21)
+    same = makeplots.plot_exact_vs_tdvp(
+        t, np.cos(t), t, np.cos(t) + 1e-5, filename="same.png", directory=tmp_path
+    )
+    other = makeplots.plot_exact_vs_tdvp(
+        t, np.cos(t), t[::2], np.cos(t[::2]), filename="other.png", directory=tmp_path
+    )
+    assert _is_png(same)
+    assert _is_png(other)
+    with pytest.raises(ValueError):
+        makeplots.plot_exact_vs_tdvp(
+            t, np.cos(t), t, np.cos(t) + 0j, filename="c.png", directory=tmp_path
+        )
+    with pytest.raises(ValueError):
+        makeplots.plot_exact_vs_tdvp(
+            t, np.cos(t[:-1]), t, np.cos(t), filename="s.png", directory=tmp_path
+        )

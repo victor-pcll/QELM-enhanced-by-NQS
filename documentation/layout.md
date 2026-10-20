@@ -6,6 +6,8 @@
 | `main.py` | Entrypoint. Seeds NumPy, loads `.env`, prints the selection, and runs the pipeline |
 | `src/QRC/NQS/models/` | `IsingModel` (dense Hamiltonian built with NetKet), `KitaevModel` scaffold, and the time-evolution stub |
 | `src/QRC/NQS/variational/` | NetKet 3 building blocks: Hilbert space, chain, Ising Hamiltonian, magnetization, RBM, variational states, `build_nqs(cfg)` |
+| `src/QRC/NQS/measurements/` | Reservoir Hamiltonian `h Σ Z_i + Σ_{i<j} J_ij X_i X_j` and observables |
+| `src/QRC/NQS/dynamics/` | Exact evolution (`expm_multiply`), TDVP driver, TDVP-vs-ED baseline. See [Dynamics](dynamics.md) |
 | `src/QRC/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
 | `src/QRC/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
 | `src/QRC/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |
@@ -17,6 +19,7 @@
 | `src/QRC/NQS/selection.py` | Loads `.env` and formats the selection line |
 | `data/` | Local datasets. Gitignored, and not created by the package |
 | `notebooks/00_outputs_starter.ipynb` | Loads the latest run of an experiment from the root `outputs/` |
+| `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics, N=6, h=10, T=5 |
 | `notebooks/series.ipynb` | Plots a local `data/series.npy` into `outputs/series.png` |
 | `tests/` | pytest |
 

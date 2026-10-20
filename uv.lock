@@ -1881,6 +1881,7 @@ dependencies = [
     { name = "netket" },
     { name = "numpy" },
     { name = "python-dotenv" },
+    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -1898,6 +1899,7 @@ requires-dist = [
     { name = "netket", specifier = ">=3.20" },
     { name = "numpy", specifier = ">=2.5.3" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "scipy", specifier = ">=1.14" },
 ]
 
 [package.metadata.requires-dev]

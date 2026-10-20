@@ -11,6 +11,7 @@
 | `src/QELM/NQS/embedding/` | Ground-state preparation by VMC (`VMCGroundStatePreparation`). See [VMC](vmc.md) |
 | `src/QELM/NQS/evaluation/QGT.py` | Quantum geometric tensor analysis. See [QGT](qgt.md) |
 | `src/QELM/NQS/evaluation/representations.py` | SVD of the RBM weights. See [Hidden representations](representations.md) |
+| `src/QELM/NQS/qelm/` | QELM feature map (`QELMReservoir`, `feature_matrix`) and `RidgeReadout`. See [QELM](qelm.md) |
 | `src/QELM/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
 | `src/QELM/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
 | `src/QELM/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |

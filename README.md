@@ -29,6 +29,7 @@ uv sync
 | `src/QELM/NQS/measurements/` | All-to-all reservoir Hamiltonian and observables |
 | `src/QELM/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline |
 | `src/QELM/NQS/embedding/` | Ground-state preparation by VMC |
+| `src/QELM/NQS/qelm/` | QELM feature map (TDVP or ED) and ridge readout |
 | `src/QELM/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
 | `src/QELM/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
 | `src/QELM/NQS/evaluation/` | Metrics and plot scaffolds |

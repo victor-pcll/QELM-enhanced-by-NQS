@@ -11,4 +11,5 @@ Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/
 - [VMC](vmc.md) — ground-state preparation, defaults and outputs
 - [QGT](qgt.md) — Fubini-Study metric, Berry curvature, rank and conditioning
 - [Hidden representations](representations.md) — SVD of the RBM weights
+- [QELM](qelm.md) — feature map (TDVP vs ED) and ridge readout
 - [Code quality](code-quality.md) — Ruff, Mypy, pytest, and the seed from config

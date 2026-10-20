@@ -7,13 +7,18 @@ from typing import Literal
 import flax.linen as nn
 import jax.numpy as jnp
 import netket as nk
+from jax.nn.initializers import normal
 
 StateKind = Literal["full_sum", "mc"]
 
 _DTYPES = {"complex": jnp.complex128, "real": jnp.float64}
 
 
-def rbm(alpha: int = 1, param_dtype: str = "complex") -> nn.Module:
+def rbm(
+    alpha: int = 1,
+    param_dtype: str = "complex",
+    init_std: float | None = None,
+) -> nn.Module:
     """Return a Restricted Boltzmann Machine ansatz.
 
     ``psi(s) = exp(sum_i a_i s_i) * prod_j 2 cosh(b_j + sum_i W_ij s_i)``
@@ -23,12 +28,20 @@ def rbm(alpha: int = 1, param_dtype: str = "complex") -> nn.Module:
         alpha: Hidden-unit density, at least 1.
         param_dtype: ``"complex"`` (needed for real-time dynamics) or
             ``"real"``.
+        init_std: Standard deviation of the normal initialization of all
+            parameters (weights and both biases). ``None`` keeps NetKet's
+            default (0.01). Near ``W = 0`` the derivatives
+            ``d log psi / d W_ij = s_i tanh(theta_j)`` vanish, so the quantum
+            geometric tensor is nearly singular and the first TDVP step
+            jumps off the exact trajectory; ``init_std ~ 0.1`` starts from a
+            regular point of the manifold.
 
     Returns:
         A NetKet ``RBM`` Flax module.
 
     Raises:
-        ValueError: If ``alpha < 1`` or ``param_dtype`` is unknown.
+        ValueError: If ``alpha < 1``, ``param_dtype`` is unknown, or
+            ``init_std`` is not positive.
     """
     if alpha < 1:
         raise ValueError(f"alpha must be >= 1, got {alpha}.")
@@ -39,7 +52,18 @@ def rbm(alpha: int = 1, param_dtype: str = "complex") -> nn.Module:
         raise ValueError(
             f"Unknown param_dtype {param_dtype!r}. Known: {known}."
         ) from exc
-    return nk.models.RBM(alpha=alpha, param_dtype=dtype)
+    if init_std is None:
+        return nk.models.RBM(alpha=alpha, param_dtype=dtype)
+    if init_std <= 0:
+        raise ValueError(f"init_std must be > 0, got {init_std}.")
+    init = normal(init_std)
+    return nk.models.RBM(
+        alpha=alpha,
+        param_dtype=dtype,
+        kernel_init=init,
+        hidden_bias_init=init,
+        visible_bias_init=init,
+    )
 
 
 def variational_state(

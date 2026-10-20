@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from hydra.core.hydra_config import HydraConfig
@@ -86,8 +87,9 @@ def experiment_paths(
     """Resolve and create the folders of the current run.
 
     Resolution order: an explicit ``root``; else the active Hydra run
-    directory; else ``<outputs_root>/<experiment_name>/<uuid>/`` so that
-    code run outside Hydra (tests, notebooks) never overwrites a run.
+    directory; else a new ``<outputs_root>/<experiment_name>/<timestamp>_<id>/``
+    (see :func:`new_run_name`), so that code run outside Hydra (tests,
+    notebooks) never overwrites a run and runs still sort by time.
 
     Args:
         root: Explicit run directory.
@@ -100,8 +102,20 @@ def experiment_paths(
     if root is None:
         root = hydra_run_dir()
     if root is None:
-        root = Path(outputs_root) / experiment_name / str(uuid.uuid4())
+        root = Path(outputs_root) / experiment_name / new_run_name()
     return ExperimentPaths.at(root).create()
 
 
-__all__ = ["OUTPUTS_ROOT", "ExperimentPaths", "experiment_paths", "hydra_run_dir"]
+def new_run_name() -> str:
+    """Return ``YYYY-MM-DD_HH-MM-SS_<8 hex>``: sortable by time and unique."""
+    stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    return f"{stamp}_{uuid.uuid4().hex[:8]}"
+
+
+__all__ = [
+    "OUTPUTS_ROOT",
+    "ExperimentPaths",
+    "experiment_paths",
+    "hydra_run_dir",
+    "new_run_name",
+]

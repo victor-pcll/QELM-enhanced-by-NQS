@@ -28,6 +28,7 @@ uv sync
 | `src/QRC/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
 | `src/QRC/NQS/measurements/` | All-to-all reservoir Hamiltonian and observables |
 | `src/QRC/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline |
+| `src/QRC/NQS/embedding/` | Ground-state preparation by VMC |
 | `src/QRC/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
 | `src/QRC/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
 | `src/QRC/NQS/evaluation/` | Metrics and plot scaffolds |

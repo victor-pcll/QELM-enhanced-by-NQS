@@ -167,6 +167,74 @@ def plot_convergence(
     return save_figure(fig, filename, directory)
 
 
+def plot_exact_vs_tdvp(
+    times_exact: ArrayLike,
+    exact: ArrayLike,
+    times_tdvp: ArrayLike,
+    tdvp: ArrayLike,
+    *,
+    filename: str,
+    directory: Path | str | None = None,
+    ylabel: str = "",
+    title: str = "",
+) -> Path:
+    """Plot an exact and a TDVP observable, with their absolute error below.
+
+    Top panel: exact curve (black line) and TDVP (red dashes). Bottom
+    panel: ``|TDVP - exact|`` on a log scale, drawn only when both share
+    the same time grid.
+
+    Args:
+        times_exact: Times of the exact curve, shape ``(n,)``.
+        exact: Exact real values, shape ``(n,)``.
+        times_tdvp: Times of the TDVP curve, shape ``(m,)``.
+        tdvp: TDVP real values, shape ``(m,)``.
+        filename: Output file name.
+        directory: Target folder, see :func:`plots_dir`.
+        ylabel: Observable label.
+        title: Figure title.
+
+    Returns:
+        Path of the written figure.
+
+    Raises:
+        ValueError: If a curve and its times differ in shape, or a curve
+            is complex.
+    """
+    t_ex = np.asarray(times_exact, dtype=float)
+    t_nqs = np.asarray(times_tdvp, dtype=float)
+    y_ex = np.asarray(exact)
+    y_nqs = np.asarray(tdvp)
+    for name, t, y in (("exact", t_ex, y_ex), ("tdvp", t_nqs, y_nqs)):
+        if np.iscomplexobj(y):
+            raise ValueError(f"{name} is complex; plot its real part.")
+        if t.shape != y.shape:
+            raise ValueError(f"{name} has shape {y.shape}, its times {t.shape}.")
+    same_grid = t_ex.shape == t_nqs.shape and np.allclose(t_ex, t_nqs)
+
+    fig = Figure(figsize=(8, 6 if same_grid else 4.5))
+    if same_grid:
+        ax, ax_err = fig.subplots(2, 1, sharex=True, height_ratios=[3, 1])
+    else:
+        ax = fig.add_subplot()
+    ax.plot(t_ex, y_ex, "k-", linewidth=2, label="Exact (ED)")
+    ax.plot(t_nqs, y_nqs, "r--", label="TDVP (NQS)")
+    ax.set_ylabel(ylabel)
+    if title:
+        ax.set_title(title)
+    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend()
+    if same_grid:
+        error = np.abs(y_nqs - y_ex)
+        ax_err.semilogy(t_ex, np.maximum(error, 1e-16), "b-")
+        ax_err.set_ylabel("|TDVP - ED|")
+        ax_err.set_xlabel("t")
+        ax_err.grid(True, linestyle="--", alpha=0.6)
+    else:
+        ax.set_xlabel("t")
+    return save_figure(fig, filename, directory)
+
+
 def plot_energy_variance(
     iterations: ArrayLike,
     variance: ArrayLike,
@@ -209,4 +277,11 @@ def plot_energy_variance(
     )
 
 
-__all__ = ["plot_convergence", "plot_time_series", "plots_dir", "save_figure"]
+__all__ = [
+    "plot_convergence",
+    "plot_energy_variance",
+    "plot_exact_vs_tdvp",
+    "plot_time_series",
+    "plots_dir",
+    "save_figure",
+]

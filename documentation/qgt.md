@@ -29,3 +29,15 @@ result.curvature_norm  # Frobenius norm of Ω
 ## What the RBM looks like at initialization
 
 At `W = b = 0`, `ψ(s) ∝ exp(Σ a_i s_i)` and `O_{b_j} = O_{W_ij} = tanh(0) = 0`. Only the `N` visible biases move the state, so `rank(g) = N` out of `N + M + NM` parameters, and `g_{a_i a_i} = 1 − tanh²(2 Re a_i)`. A test checks this. NetKet initializes the RBM with standard deviation 0.01, which puts it right next to this singular point. This is why the first TDVP step from the default initialization leaves the exact trajectory (see the Loschmidt echo test of issue #8). A small effective rank or a huge condition number signals over-parameterization or a near-singular starting point.
+
+## Fidelity susceptibility
+
+`QRC.NQS.evaluation.fidelity.compute_fidelity_susceptibility(S, v)` returns `χ_F(v) = v† S v`: the curvature of the infidelity when the parameters move by `ε v`:
+
+```text
+1 − |<ψ(θ)|ψ(θ + ε v)>|² = ε² χ_F(v) + O(ε³)
+```
+
+With `S = g + (i/2) Ω` and `v = x + i y`, `v† S v = xᵀ g x + yᵀ g y + yᵀ Ω x`. For a real direction this is `vᵀ g v`, the Fubini-Study form. For a complex direction the Berry term `yᵀ Ω x` is also needed: a test measures the infidelity by finite differences and finds `v† S v`, while `v† Re[S] v` misses it by about 20%. `metric_only=True` returns `v† Re[S] v` for comparison.
+
+`v` can be a flat vector or a parameter PyTree, such as a VMC gradient from `state.expect_and_grad(H)` or a TDVP update. Along the TDVP velocity `θ̇ = −i S⁺ F`, `χ_F(θ̇) = F† S⁺ F`, which is the part of the energy variance the manifold captures. On a manifold that spans the Hilbert space (N=4 RBM), it equals `<H²> − <H>²` exactly. `fidelity_susceptibility_of_state(state, v)` computes the QGT and `χ_F` in one call.

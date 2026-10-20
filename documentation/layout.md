@@ -6,6 +6,7 @@
 | `main.py` | Entrypoint. Seeds NumPy, loads `.env`, prints the selection, and runs the pipeline |
 | `src/QRC/NQS/models/` | `IsingModel` (dense Hamiltonian built with NetKet), `KitaevModel` scaffold, and the time-evolution stub |
 | `src/QRC/NQS/variational/` | NetKet 3 building blocks: Hilbert space, chain, Ising Hamiltonian, magnetization, RBM, variational states, `build_nqs(cfg)` |
+| `src/QRC/NQS/embedding/` | Ground-state preparation by VMC (`VMCGroundStatePreparation`). See [VMC](vmc.md) |
 | `src/QRC/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
 | `src/QRC/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
 | `src/QRC/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |

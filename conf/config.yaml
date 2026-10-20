@@ -3,6 +3,7 @@ defaults:
   - training: ridge
   - evaluation: default
   - nqs: rbm
+  - vmc: default
   - override hydra/job_logging: qrc
   - _self_
 

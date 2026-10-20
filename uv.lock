@@ -1880,6 +1880,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "netket" },
     { name = "numpy" },
+    { name = "optax" },
     { name = "python-dotenv" },
 ]
 
@@ -1897,6 +1898,7 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "netket", specifier = ">=3.20" },
     { name = "numpy", specifier = ">=2.5.3" },
+    { name = "optax", specifier = ">=0.2" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
 ]
 

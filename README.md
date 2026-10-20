@@ -26,6 +26,7 @@ uv sync
 | `data/` | Local time series and training datasets (gitignored) |
 | `src/QRC/NQS/models/` | Hamiltonians (Ising via NetKet, Kitaev scaffold) and time evolution |
 | `src/QRC/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
+| `src/QRC/NQS/embedding/` | Ground-state preparation by VMC |
 | `src/QRC/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
 | `src/QRC/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
 | `src/QRC/NQS/evaluation/` | Metrics and plot scaffolds |

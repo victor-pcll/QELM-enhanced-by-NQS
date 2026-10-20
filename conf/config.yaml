@@ -2,10 +2,17 @@ defaults:
   - sim_type: ising
   - training: ridge
   - evaluation: default
+  - nqs: rbm
+  - override hydra/job_logging: qrc
   - _self_
 
+# Name of the experiment folder under outputs/. Override with
+# experiment_name=my_study on the command line.
+experiment_name: default
+
 # Shared experiment settings. Simulation-specific parameters live in conf/sim_type/.
-# Scalar seed applied once at startup. Override with seed=0 on the command line.
+# Scalar seed applied once at startup (NumPy and the NetKet parameter init).
+# Override with seed=0 on the command line.
 seed: 42
 
 test:
@@ -13,7 +20,7 @@ test:
   n_steps: 100
 
 # Checkpoint written at the end of every run. No secrets belong here.
-# dir: null uses Hydra's timestamped run directory when a job is active,
+# dir: null uses <Hydra run dir>/exp/ when a job is active,
 # otherwise <fallback_root>/<uuid>/.
 checkpoint:
   dir: null
@@ -21,8 +28,13 @@ checkpoint:
   use_uuid: false
   filename: checkpoint.npz
 
+# Every run lands in outputs/<experiment_name>/<timestamp>/ with
+# exp/ (raw data), logs/ (execution logs) and plots/ (figures).
 hydra:
   job:
     chdir: false
   run:
-    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: outputs/${experiment_name}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: outputs/${experiment_name}/multirun_${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}

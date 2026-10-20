@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from qrc_env_template.models.base import HamiltonianModel
-from qrc_env_template.models.ising import IsingModel
-from qrc_env_template.models.kitaev import KitaevModel
+from QRC.NQS.models.base import HamiltonianModel
+from QRC.NQS.models.ising import IsingModel
+from QRC.NQS.models.kitaev import KitaevModel
 
 _MODELS: dict[str, type[HamiltonianModel]] = {
     IsingModel.name: IsingModel,

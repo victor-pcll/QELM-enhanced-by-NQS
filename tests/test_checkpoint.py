@@ -9,9 +9,9 @@ from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 from hydra.core.hydra_config import HydraConfig
 
-from qrc_env_template.checkpoint import save_checkpoint
-from qrc_env_template.models import IsingModel
-from qrc_env_template.training import RidgeRegression
+from QRC.NQS.checkpoint import save_checkpoint
+from QRC.NQS.models import IsingModel
+from QRC.NQS.training import RidgeRegression
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "conf"

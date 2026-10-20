@@ -1,8 +1,12 @@
 # @package _global_
 
-# Placeholders for an Ising run. Add another file in this directory to add a sim type.
+# Transverse-field Ising chain, NetKet convention:
+#   H = -h * sum_i X_i + J * sum_<ij> Z_i Z_j
+# J > 0 is antiferromagnetic. Add another file in this directory to add a sim type.
 sim_type: ising
 ising:
   N: 10
   J: 1.0
+  h: 1.0
+  pbc: false
   learning_rate: 1.0e-3

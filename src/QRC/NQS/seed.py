@@ -10,8 +10,9 @@ def set_seed(cfg: DictConfig) -> int:
     """Seed NumPy from ``cfg.seed``.
 
     Call this once at startup, before any stochastic work. The default is
-    ``seed: 42`` in ``conf/config.yaml``. PyTorch and JAX are not
-    dependencies, so only NumPy is seeded.
+    ``seed: 42`` in ``conf/config.yaml``. JAX has no global random
+    state: NetKet parameter initialization and sampling receive
+    ``cfg.seed`` explicitly (see :func:`QRC.NQS.variational.build_nqs`).
 
     Args:
         cfg: Composed Hydra config. ``cfg.seed`` is a scalar integer.

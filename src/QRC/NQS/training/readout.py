@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from qrc_env_template.training.base import Trainer
+from QRC.NQS.training.base import Trainer
 
 
 class Readout(Trainer):

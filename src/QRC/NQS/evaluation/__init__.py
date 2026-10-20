@@ -7,8 +7,8 @@ from typing import Any
 
 from omegaconf import DictConfig
 
-from qrc_env_template.evaluation.metrics import metric_status
-from qrc_env_template.evaluation.plots import render_plot
+from QRC.NQS.evaluation.metrics import metric_status
+from QRC.NQS.evaluation.plots import render_plot
 
 Evaluator = Callable[..., str]
 

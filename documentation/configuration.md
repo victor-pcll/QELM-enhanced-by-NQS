@@ -10,17 +10,21 @@ Scientific parameters and secrets live in different files.
 
 | Key | Role |
 | --- | --- |
-| `defaults` | `sim_type: ising`, `training: ridge`, `evaluation: default` |
+| `defaults` | `sim_type: ising`, `training: ridge`, `evaluation: default`, `nqs: rbm`, and the `hydra/job_logging: qrc` override |
+| `experiment_name` | Folder under `outputs/`. Default `default` |
 | `seed` | Integer passed to NumPy at startup. See [Code quality](code-quality.md). |
 | `test.dt`, `test.n_steps` | Scalar step size and step count passed to `evolve` |
 | `checkpoint` | Where the run writes its `.npz`. See [Checkpoints and local data](checkpoints.md). |
-| `hydra.run.dir` | `outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}` |
+| `hydra.run.dir` | `outputs/${experiment_name}/${now:%Y-%m-%d_%H-%M-%S}` |
+| `hydra.sweep.dir` | `outputs/${experiment_name}/multirun_${now:%Y-%m-%d_%H-%M-%S}`, one subfolder per job |
 
 Group files:
 
 | File | Contents |
 | --- | --- |
-| `conf/sim_type/ising.yaml` | `sim_type: ising` and the `ising` block: `N`, `J`, `learning_rate` |
+| `conf/sim_type/ising.yaml` | `sim_type: ising` and the `ising` block: `N`, `J`, `h`, `pbc`, `learning_rate`. Convention `H = -h sum X_i + J sum Z_i Z_j` |
+| `conf/nqs/rbm.yaml` | The ansatz: `model: rbm`, `alpha`, `param_dtype` (`complex` or `real`), `state` (`full_sum` or `mc`), `n_samples` |
+| `conf/hydra/job_logging/qrc.yaml` | Hydra's default logging, with the log file moved to `<run>/logs/` |
 | `conf/sim_type/kitaev.yaml` | `sim_type: kitaev` and an empty `kitaev` block. No Hamiltonian parameters are defined there |
 | `conf/training/ridge.yaml` | `name: ridge` |
 | `conf/training/readout.yaml` | `name: readout` |

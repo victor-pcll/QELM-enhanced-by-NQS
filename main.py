@@ -1,9 +1,11 @@
 """Pipeline entrypoint.
 
 Scientific parameters come from ``conf/`` YAML and CLI overrides.
-``main`` seeds NumPy from ``cfg.seed``, then routes sim type to a model,
-training, and evaluation, and writes a checkpoint. Secrets (API keys,
-local paths) are loaded from ``.env`` when present.
+``main`` seeds NumPy from ``cfg.seed``, creates the run folders
+``outputs/<experiment_name>/<timestamp>/{exp,logs,plots}``, then routes sim
+type to a model, training, evaluation and the NetKet setup, and writes a
+checkpoint. Secrets (API keys, local paths) are loaded from ``.env`` when
+present.
 
 Run from the repository root:
 
@@ -15,14 +17,15 @@ from __future__ import annotations
 import hydra
 from omegaconf import DictConfig
 
-from qrc_env_template.pipeline import run_pipeline
-from qrc_env_template.seed import set_seed
-from qrc_env_template.selection import format_selection, load_secrets
+from QRC.NQS.paths import experiment_paths
+from QRC.NQS.pipeline import run_pipeline
+from QRC.NQS.seed import set_seed
+from QRC.NQS.selection import format_selection, load_secrets
 
 
 @hydra.main(version_base="1.3", config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
-    """Seed NumPy, load secrets, and run the selected pipeline.
+    """Seed NumPy, create the run folders, load secrets, and run the pipeline.
 
     Args:
         cfg: Hydra config composed from ``conf/`` and CLI overrides.
@@ -30,7 +33,9 @@ def main(cfg: DictConfig) -> None:
             before the pipeline runs.
     """
     set_seed(cfg)
+    paths = experiment_paths()
     load_secrets()
+    print(f"run_dir={paths.root}")
     print(format_selection(cfg))
     print(run_pipeline(cfg))
 

@@ -25,11 +25,20 @@ DVC is not set up.
 | `checkpoint.use_uuid` | `false`. When `true`, a UUID directory is nested under the chosen directory |
 | `checkpoint.filename` | `checkpoint.npz`. This must be a file name, not a path |
 
-`uv run python main.py` starts a Hydra job, so the file is the timestamped run directory from `hydra.run.dir`:
+`uv run python main.py` starts a Hydra job, so the file goes to the `exp/` folder of the run directory from `hydra.run.dir`:
 
 ```text
-outputs/<YYYY-MM-DD>/<HH-MM-SS>/checkpoint.npz
+outputs/<experiment_name>/<YYYY-MM-DD_HH-MM-SS>/
+├── .hydra/                      resolved config of the run
+├── exp/
+│   ├── checkpoint.npz
+│   └── nqs_variables.msgpack    Flax variables of the variational state
+├── logs/
+│   └── main.log                 Hydra job log
+└── plots/                       figures from QRC.NQS.utils.makeplots
 ```
+
+`main.py` creates `exp/`, `logs/` and `plots/` at startup. Choose the experiment folder with `experiment_name=my_study`. Reload the NQS variables with `flax.serialization.from_bytes(state.variables, path.read_bytes())`.
 
 If nothing has initialized Hydra and `checkpoint.dir` is unset, the file is:
 
@@ -37,7 +46,7 @@ If nothing has initialized Hydra and `checkpoint.dir` is unset, the file is:
 outputs/<uuid>/checkpoint.npz
 ```
 
-`outputs` there is `checkpoint.fallback_root`. Set `checkpoint.dir` to pick the directory. Set `checkpoint.use_uuid=true` to nest a UUID under that directory (or under the Hydra run directory, when `dir` is still unset).
+`outputs` there is `checkpoint.fallback_root`. Set `checkpoint.dir` to pick the directory. Set `checkpoint.use_uuid=true` to nest a UUID under that directory (or under the run's `exp/` folder, when `dir` is still unset).
 
 ## Archive contents
 

@@ -1,8 +1,9 @@
 """Write a lightweight checkpoint at the end of a run.
 
 The destination comes from ``cfg.checkpoint``. When ``dir`` is unset, an
-active Hydra job uses its timestamped run directory. Otherwise the file
-is placed under ``fallback_root/<uuid>/``.
+active Hydra job uses the ``exp/`` folder of its run directory
+(``outputs/<experiment_name>/<timestamp>/exp/``). Otherwise the file is
+placed under ``fallback_root/<uuid>/``.
 """
 
 from __future__ import annotations
@@ -14,11 +15,11 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig
 
-from qrc_env_template.models.base import EvolutionState, HamiltonianModel
-from qrc_env_template.training.base import Trainer
+from QRC.NQS.models.base import EvolutionState, HamiltonianModel
+from QRC.NQS.paths import ExperimentPaths, hydra_run_dir
+from QRC.NQS.training.base import Trainer
 
 _UNSET = frozenset({"", "null", "none", "???"})
 
@@ -90,9 +91,9 @@ def resolve_checkpoint_path(cfg: DictConfig, *, run_id: str) -> Path:
         directory = configured
         nest_uuid = use_uuid
     else:
-        hydra_dir = _hydra_run_dir()
+        hydra_dir = hydra_run_dir()
         if hydra_dir is not None:
-            directory = hydra_dir
+            directory = ExperimentPaths.at(hydra_dir).exp
             nest_uuid = use_uuid
         else:
             directory = Path(str(cfg.checkpoint.fallback_root)) / run_id
@@ -116,16 +117,6 @@ def _optional_dir(value: object) -> Path | None:
     if text.lower() in _UNSET:
         return None
     return Path(text)
-
-
-def _hydra_run_dir() -> Path | None:
-    """Return Hydra's run directory when a job has created one."""
-    if not HydraConfig.initialized():
-        return None
-    output_dir = str(HydraConfig.get().runtime.output_dir).strip()
-    if output_dir.lower() in _UNSET:
-        return None
-    return Path(output_dir)
 
 
 def _metadata(

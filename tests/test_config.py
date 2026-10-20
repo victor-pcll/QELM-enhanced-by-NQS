@@ -7,8 +7,8 @@ import numpy as np
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
-from QRC.NQS.seed import set_seed
-from QRC.NQS.selection import format_selection
+from QELM.NQS.seed import set_seed
+from QELM.NQS.selection import format_selection
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "conf"

@@ -1,6 +1,6 @@
-# QRC-enhanced-by-NQS
+# QELM-enhanced-by-NQS
 
-Neural quantum states (NetKet 3) as a probe for quantum reservoir computing (QRC) and quantum extreme learning machines (QELM). The library is `QRC.NQS`, managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.12 or newer.
+Neural quantum states (NetKet 3) for a quantum extreme learning machine (QELM): short-time variational dynamics of a spin reservoir, measured and read out linearly. The project started as quantum reservoir computing (QRC); it moved to QELM because the TDVP dynamics is much more robust over short times. The library is `QELM.NQS`, managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.12 or newer.
 
 Longer notes are in [`documentation/`](documentation/README.md): setup, Hydra and `.env`, the project layout, checkpoints, and code quality.
 
@@ -24,14 +24,14 @@ uv sync
 | --- | --- |
 | `conf/` | Hydra YAML: `config.yaml` plus groups `sim_type`, `nqs`, `training`, `evaluation` |
 | `data/` | Local time series and training datasets (gitignored) |
-| `src/QRC/NQS/models/` | Hamiltonians (Ising via NetKet, Kitaev scaffold) and time evolution |
-| `src/QRC/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
-| `src/QRC/NQS/measurements/` | All-to-all reservoir Hamiltonian and observables |
-| `src/QRC/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline |
-| `src/QRC/NQS/embedding/` | Ground-state preparation by VMC |
-| `src/QRC/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
-| `src/QRC/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
-| `src/QRC/NQS/evaluation/` | Metrics and plot scaffolds |
+| `src/QELM/NQS/models/` | Hamiltonians (Ising via NetKet, Kitaev scaffold) and time evolution |
+| `src/QELM/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
+| `src/QELM/NQS/measurements/` | All-to-all reservoir Hamiltonian and observables |
+| `src/QELM/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline |
+| `src/QELM/NQS/embedding/` | Ground-state preparation by VMC |
+| `src/QELM/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
+| `src/QELM/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
+| `src/QELM/NQS/evaluation/` | Metrics and plot scaffolds |
 | `notebooks/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
 | `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics baseline |
 | `notebooks/series.ipynb` | Plot a local series from `data/`; the library call stays a scaffold |
@@ -88,4 +88,4 @@ Ruff formats and lints. Mypy typechecks the package and `main.py`. At startup, `
 
 ## Develop
 
-Package code lives in `src/QRC/NQS`. Import it as `QRC.NQS`. Add a dependency with `uv add`.
+Package code lives in `src/QELM/NQS`. Import it as `QELM.NQS`. Add a dependency with `uv add`.

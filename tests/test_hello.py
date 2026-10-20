@@ -1,5 +1,5 @@
-from QRC.NQS import hello
+from QELM.NQS import hello
 
 
 def test_hello() -> None:
-    assert hello() == "Hello from QRC.NQS!"
+    assert hello() == "Hello from QELM.NQS!"

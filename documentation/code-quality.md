@@ -12,9 +12,9 @@ uv run pytest
 
 Ruff lints and formats. `pyproject.toml` sets the target to Python 3.12, a line length of 88, and the rule sets `E`, `F`, `I`, and `UP`. `ruff check` reports lint findings. `ruff format --check` reports format drift and does not rewrite files. `ruff format` rewrites them.
 
-Mypy typechecks `src/QRC/NQS` and `main.py` with `disallow_untyped_defs`. It does not typecheck `tests/`.
+Mypy typechecks `src/QELM/NQS` and `main.py` with `disallow_untyped_defs`. It does not typecheck `tests/`.
 
-pytest collects `tests/` with `--import-mode=importlib`, so `tests/QRC/NQS/` can mirror the package layout and reuse file names. Physics tests there compare NetKet operators against Kronecker-product constructions, the exact Jordan-Wigner ground energy of the periodic Ising chain, and the variational principle `E0 <= <H> <= E_max`.
+pytest collects `tests/` with `--import-mode=importlib`, so `tests/QELM/NQS/` can mirror the package layout and reuse file names. Physics tests there compare NetKet operators against Kronecker-product constructions, the exact Jordan-Wigner ground energy of the periodic Ising chain, and the variational principle `E0 <= <H> <= E_max`.
 
 NetKet ships no type information, so `pyproject.toml` tells Mypy to treat `netket` as untyped.
 

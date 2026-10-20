@@ -7,4 +7,5 @@ Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/
 - [Layout](layout.md) — `conf/`, `models/`, `variational/`, `utils/`, `training/`, `evaluation/`, and `main.py`
 - [Running](running.md) — command-line overrides and the series notebook
 - [Checkpoints and local data](checkpoints.md) — the `outputs/<experiment>/<timestamp>/{exp,logs,plots}` layout, `data/`, and `wandb/`
+- [QGT](qgt.md) — Fubini-Study metric, Berry curvature, rank and conditioning
 - [Code quality](code-quality.md) — Ruff, Mypy, pytest, and the seed from config

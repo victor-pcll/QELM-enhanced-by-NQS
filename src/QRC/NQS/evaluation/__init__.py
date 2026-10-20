@@ -7,6 +7,7 @@ from typing import Any
 
 from omegaconf import DictConfig
 
+from QRC.NQS.evaluation.energy import compute_energy_variance, exact_energy_variance
 from QRC.NQS.evaluation.metrics import metric_status
 from QRC.NQS.evaluation.plots import render_plot
 
@@ -63,4 +64,11 @@ def get_evaluator(name: str) -> Evaluator:
         raise KeyError(f"Unknown evaluation {name!r}. Known: {known}.") from exc
 
 
-__all__ = ["evaluate", "get_evaluator", "metric_status", "render_plot"]
+__all__ = [
+    "compute_energy_variance",
+    "evaluate",
+    "exact_energy_variance",
+    "get_evaluator",
+    "metric_status",
+    "render_plot",
+]

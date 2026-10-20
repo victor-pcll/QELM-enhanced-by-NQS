@@ -1,0 +1,8 @@
+# Ground-state preparation by VMC with stochastic reconfiguration (VMC_SR).
+# Validated defaults; see documentation/vmc.md.
+learning_rate: 1.0e-2
+n_iter: 300
+n_samples: 2048
+alpha: 1
+param_dtype: complex
+diag_shift: 1.0e-4

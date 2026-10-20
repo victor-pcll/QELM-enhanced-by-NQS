@@ -13,6 +13,7 @@ dependencies = [
     "netket>=3.20",
     "numpy>=2.5.3",
     "python-dotenv>=1.2.3",
+    "scipy>=1.14",
 ]
 
 [build-system]
@@ -50,9 +51,9 @@ disallow_untyped_defs = true
 warn_unused_ignores = true
 explicit_package_bases = true
 
-# NetKet ships no type information; its objects are typed as Any.
+# NetKet and SciPy ship no type information; their objects are typed as Any.
 [[tool.mypy.overrides]]
-module = ["netket", "netket.*"]
+module = ["netket", "netket.*", "scipy", "scipy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

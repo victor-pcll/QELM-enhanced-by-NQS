@@ -9,6 +9,7 @@
 | `src/QRC/NQS/measurements/` | Reservoir Hamiltonian `h Σ Z_i + Σ_{i<j} J_ij X_i X_j` and observables |
 | `src/QRC/NQS/dynamics/` | Exact evolution (`expm_multiply`), TDVP driver, TDVP-vs-ED baseline. See [Dynamics](dynamics.md) |
 | `src/QRC/NQS/embedding/` | Ground-state preparation by VMC (`VMCGroundStatePreparation`). See [VMC](vmc.md) |
+| `src/QRC/NQS/evaluation/QGT.py` | Quantum geometric tensor analysis. See [QGT](qgt.md) |
 | `src/QRC/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
 | `src/QRC/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
 | `src/QRC/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |

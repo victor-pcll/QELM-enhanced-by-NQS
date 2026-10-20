@@ -10,4 +10,5 @@ Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/
 - [Dynamics](dynamics.md) — exact evolution, TDVP settings, and the TDVP-vs-ED baseline
 - [VMC](vmc.md) — ground-state preparation, defaults and outputs
 - [QGT](qgt.md) — Fubini-Study metric, Berry curvature, rank and conditioning
+- [Hidden representations](representations.md) — SVD of the RBM weights
 - [Code quality](code-quality.md) — Ruff, Mypy, pytest, and the seed from config

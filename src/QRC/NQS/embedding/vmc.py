@@ -14,10 +14,13 @@ import optax
 from omegaconf import DictConfig
 
 from QRC.NQS.paths import ExperimentPaths, experiment_paths
+from QRC.NQS.utils.makeplots import plot_energy_variance
 from QRC.NQS.variational import rbm, variational_state
 
 HYPERPARAMETERS_FILENAME = "hyperparameters.json"
 LOG_PREFIX = "vmc"
+ENERGY_FILENAME = "vmc_energy.npz"
+VARIANCE_PLOT_FILENAME = "vmc_energy_variance.png"
 
 
 @dataclass(frozen=True)
@@ -73,13 +76,19 @@ class VMCGroundStatePreparation:
     - ``hyperparameters.json``: the settings and the system description;
     - ``vmc.log``: energy statistics (mean, error, variance, R̂) per
       iteration;
+    - ``vmc_energy.npz``: ``iters``, ``energy``, ``energy_error`` and
+      ``energy_variance`` arrays;
     - ``vmc.mpack``: the optimized variables.
+
+    The energy variance per iteration is also plotted on a log scale to
+    ``plots/vmc_energy_variance.png``.
 
     Attributes:
         hamiltonian: Hermitian NetKet operator.
         variational_state: ``MCState`` optimized in place.
         settings: Hyperparameters.
         paths: Run folders the outputs go to.
+        iterations: Iteration indices after :meth:`run`.
         energy: Mean energy per iteration after :meth:`run`.
         energy_error: Statistical error of the mean per iteration.
         energy_variance: Sample variance of the local energy per iteration.
@@ -119,6 +128,7 @@ class VMCGroundStatePreparation:
         self.optimizer = optimizer or optax.sgd(self.settings.learning_rate)
         self.paths = paths
         self.metadata = dict(metadata or {})
+        self.iterations = np.zeros(0, dtype=int)
         self.energy = np.zeros(0)
         self.energy_error = np.zeros(0)
         self.energy_variance = np.zeros(0)
@@ -202,9 +212,24 @@ class VMCGroundStatePreparation:
         json_log.flush(self.variational_state)
 
         history = memory.data["Energy"]
+        self.iterations = np.asarray(history.iters, dtype=int)
         self.energy = np.asarray(history.Mean).real.astype(float)
         self.energy_error = np.asarray(history.Sigma, dtype=float)
         self.energy_variance = np.asarray(history.Variance, dtype=float)
+        np.savez(
+            paths.exp / ENERGY_FILENAME,
+            iters=self.iterations,
+            energy=self.energy,
+            energy_error=self.energy_error,
+            energy_variance=self.energy_variance,
+        )
+        plot_energy_variance(
+            self.iterations,
+            self.energy_variance,
+            filename=VARIANCE_PLOT_FILENAME,
+            directory=paths.plots,
+            title="VMC energy variance",
+        )
         return self.variational_state
 
     @property
@@ -214,8 +239,10 @@ class VMCGroundStatePreparation:
 
 
 __all__ = [
+    "ENERGY_FILENAME",
     "HYPERPARAMETERS_FILENAME",
     "LOG_PREFIX",
+    "VARIANCE_PLOT_FILENAME",
     "VMCGroundStatePreparation",
     "VMCSettings",
 ]

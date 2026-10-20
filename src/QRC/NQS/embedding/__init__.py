@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 from QRC.NQS.embedding.vmc import (
+    ENERGY_FILENAME,
     HYPERPARAMETERS_FILENAME,
     LOG_PREFIX,
+    VARIANCE_PLOT_FILENAME,
     VMCGroundStatePreparation,
     VMCSettings,
 )
 
 __all__ = [
+    "ENERGY_FILENAME",
     "HYPERPARAMETERS_FILENAME",
     "LOG_PREFIX",
+    "VARIANCE_PLOT_FILENAME",
     "VMCGroundStatePreparation",
     "VMCSettings",
 ]

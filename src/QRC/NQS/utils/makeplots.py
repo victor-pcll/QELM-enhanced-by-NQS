@@ -235,8 +235,51 @@ def plot_exact_vs_tdvp(
     return save_figure(fig, filename, directory)
 
 
+def plot_energy_variance(
+    iterations: ArrayLike,
+    variance: ArrayLike,
+    *,
+    filename: str = "energy_variance.png",
+    directory: Path | str | None = None,
+    floor: float = 1e-16,
+    title: str = "",
+) -> Path:
+    """Plot the energy variance ``sigma_E^2`` against VMC iterations, log scale.
+
+    An exact eigenstate has ``sigma_E^2 = 0``; values are drawn as
+    ``max(sigma_E^2, floor)`` so that the log scale can show them.
+
+    Args:
+        iterations: Iteration indices, shape ``(n_iter,)``.
+        variance: Non-negative variances, shape ``(n_iter,)``.
+        filename: Output file name.
+        directory: Target folder, see :func:`plots_dir`.
+        floor: Smallest value drawn.
+        title: Figure title.
+
+    Returns:
+        Path of the written figure.
+
+    Raises:
+        ValueError: If a variance is negative or shapes differ.
+    """
+    v = np.asarray(variance, dtype=float)
+    if np.any(v < 0):
+        raise ValueError("An energy variance cannot be negative.")
+    return plot_convergence(
+        iterations,
+        np.maximum(v, floor),
+        filename=filename,
+        directory=directory,
+        ylabel=r"$\sigma_E^2 = \langle H^2 \rangle - \langle H \rangle^2$",
+        title=title,
+        log_y=True,
+    )
+
+
 __all__ = [
     "plot_convergence",
+    "plot_energy_variance",
     "plot_exact_vs_tdvp",
     "plot_time_series",
     "plots_dir",

@@ -130,3 +130,14 @@ def test_build_nqs_rejects_unknown_system_and_model() -> None:
         build_nqs(kitaev)
     with pytest.raises(ValueError):
         build_nqs(bad_model)
+
+
+def test_rbm_init_std_sets_parameter_scale() -> None:
+    hilbert, _, _ = _system(6)
+    small = _flat(variational_state(hilbert, rbm(), seed=0))
+    wide = _flat(variational_state(hilbert, rbm(init_std=0.3), seed=0))
+    # Complex normal init: E|z|^2 = std^2 for NetKet's complex initializer.
+    assert np.sqrt(np.mean(np.abs(small) ** 2)) < 0.05
+    assert 0.15 < np.sqrt(np.mean(np.abs(wide) ** 2)) < 0.6
+    with pytest.raises(ValueError):
+        rbm(init_std=0.0)

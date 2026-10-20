@@ -1882,6 +1882,7 @@ dependencies = [
     { name = "numpy" },
     { name = "optax" },
     { name = "python-dotenv" },
+    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -1900,6 +1901,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.5.3" },
     { name = "optax", specifier = ">=0.2" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "scipy", specifier = ">=1.14" },
 ]
 
 [package.metadata.requires-dev]

@@ -25,9 +25,11 @@ class TDVPSettings:
             observables are recorded on ``time_grid(T, dt)``.
         integrator: NetKet Runge-Kutta scheme. Adaptive ``RK45`` and
             ``RK23`` are forced to land on every grid time.
-        diag_shift: Tikhonov shift added to the QGT. It biases the
-            dynamics: on the N=6 baseline, ``1e-4`` gives a magnetization
-            error of 1.1e-3 at t=0.5, ``1e-6`` gives 8e-5.
+        diag_shift: Tikhonov shift added to the QGT (default ``1e-4``, as
+            in the VMC). It stabilizes the solve but biases the dynamics:
+            on the N=6 baseline, ``1e-4`` gives a magnetization error of
+            1.1e-3 at t=0.5, ``1e-6`` gives 8e-5. Pass ``1e-6`` when the
+            trajectory must match ED to better than 1e-3.
         holomorphic: ``True`` for an ansatz holomorphic in complex
             parameters, such as the complex RBM.
         linear_solver: ``"svd"`` (pseudo-inverse with cutoff ``rcond``) or
@@ -38,7 +40,7 @@ class TDVPSettings:
 
     dt: float = 1e-3
     integrator: Integrator = "RK45"
-    diag_shift: float = 1e-6
+    diag_shift: float = 1e-4
     holomorphic: bool = True
     linear_solver: LinearSolver = "svd"
     rcond: float | None = None

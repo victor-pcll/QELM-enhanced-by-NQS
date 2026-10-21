@@ -22,7 +22,7 @@ with Pauli matrices. `J` is a scalar (uniform couplings) or a real symmetric `(N
 | --- | --- | --- |
 | `dt` | `1e-3` | Initial step and recording grid |
 | `integrator` | `RK45` | Any of `RK4`, `RK45`, `RK23`, `Euler`, `Heun` |
-| `diag_shift` | `1e-6` | QGT regularization, see below |
+| `diag_shift` | `1e-4` | QGT regularization, see below |
 | `holomorphic` | `True` | The complex RBM is holomorphic |
 | `linear_solver` | `svd` | Or `pinv_smooth` |
 | `rcond` | `None` | Solver cutoff; `None` keeps NetKet's default |
@@ -36,7 +36,7 @@ with Pauli matrices. `J` is a scalar (uniform couplings) or a real symmetric `(N
 | `diag_shift=0`, SVD | 1.2e-3 | 0.9995 |
 | `diag_shift=1e-8`, `pinv_smooth` | 3e-6 | 0.9999999 |
 
-RK4 and RK45 give the same error, so the error comes from the projection and the regularization, not from the time step. The value `1e-4` from the issue #2 example fails the required `1e-3` tolerance, so the default is `1e-6`.
+RK4 and RK45 give the same error, so the error comes from the projection and the regularization, not from the time step. The default is `1e-4` (issue #17), the same as the VMC: it keeps the QGT solve stable but costs about 1e-3 on `<Z>`. The baseline, which must match ED to `1e-3`, passes `diag_shift=1e-6` explicitly (as does the notebook). `tests/QRC/NQS/dynamics/test_tdvp_baseline.py` measures both errors, so the bias stays documented by a test.
 
 ## Baseline
 

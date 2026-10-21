@@ -1,7 +1,7 @@
 [project]
-name = "qrc-nqs"
+name = "qelm-nqs"
 version = "0.1.0"
-description = "Neural quantum states (NetKet 3) as a probe for quantum reservoir computing and QELM."
+description = "Neural quantum states (NetKet 3) for a quantum extreme learning machine (QELM)."
 readme = "README.md"
 authors = [
     { name = "victor-pcll", email = "victor.peucelle@epfl.ch" }
@@ -22,8 +22,8 @@ requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-# Namespace package: src/QRC has no __init__.py, src/QRC/NQS is the library.
-module-name = "QRC.NQS"
+# Namespace package: src/QELM has no __init__.py, src/QELM/NQS is the library.
+module-name = "QELM.NQS"
 
 [dependency-groups]
 dev = [
@@ -42,12 +42,12 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["QRC"]
+known-first-party = ["QELM"]
 
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src"
-files = ["src/QRC", "main.py"]
+files = ["src/QELM", "main.py"]
 disallow_untyped_defs = true
 warn_unused_ignores = true
 explicit_package_bases = true
@@ -59,7 +59,7 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# tests/ mirrors src/QRC/NQS/ and may reuse file names across folders.
+# tests/ mirrors src/QELM/NQS/ and may reuse file names across folders.
 addopts = "--import-mode=importlib"
 
 # Optax ships no type information either.

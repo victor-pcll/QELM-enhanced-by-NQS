@@ -22,7 +22,7 @@ uv run python main.py training=ridge evaluation=default
 uv run python main.py seed=0
 uv run python main.py experiment_name=tfim_scan ising.h=0.5 nqs.alpha=2
 uv run python main.py nqs.state=mc nqs.n_samples=4096
-uv run python main.py checkpoint.dir=/tmp/qrc-run checkpoint.use_uuid=true
+uv run python main.py checkpoint.dir=/tmp/qelm-run checkpoint.use_uuid=true
 ```
 
 `training=ridge` and `evaluation=default` match the defaults in `conf/config.yaml`. `training=readout` selects `Readout`. `evaluation=default` is the only registered evaluator. An unknown `sim_type`, trainer name, or evaluator name raises `KeyError`.

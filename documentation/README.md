@@ -1,6 +1,6 @@
 # Documentation
 
-Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/`. Secrets stay in `.env`. The library is `QRC.NQS` (`src/QRC/NQS/`). NetKet 3 builds the Hilbert space, the transverse-field Ising Hamiltonian and the RBM variational state. Training and evaluation are still scaffolds: they route a config and record a status string.
+Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/`. Secrets stay in `.env`. The library is `QELM.NQS` (`src/QELM/NQS/`). NetKet 3 builds the Hilbert space, the transverse-field Ising Hamiltonian and the RBM variational state. Training and evaluation are still scaffolds: they route a config and record a status string.
 
 - [Setup](setup.md) — install uv and sync the project
 - [Configuration](configuration.md) — Hydra YAML versus `.env` secrets
@@ -11,4 +11,5 @@ Notes for this repository. Scientific parameters stay in Hydra YAML under `conf/
 - [VMC](vmc.md) — ground-state preparation, defaults and outputs
 - [QGT](qgt.md) — Fubini-Study metric, Berry curvature, rank and conditioning
 - [Hidden representations](representations.md) — SVD of the RBM weights
+- [QELM](qelm.md) — feature map (TDVP vs ED) and ridge readout
 - [Code quality](code-quality.md) — Ruff, Mypy, pytest, and the seed from config

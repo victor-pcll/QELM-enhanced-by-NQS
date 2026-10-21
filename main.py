@@ -17,10 +17,10 @@ from __future__ import annotations
 import hydra
 from omegaconf import DictConfig
 
-from QRC.NQS.paths import experiment_paths
-from QRC.NQS.pipeline import run_pipeline
-from QRC.NQS.seed import set_seed
-from QRC.NQS.selection import format_selection, load_secrets
+from QELM.NQS.paths import experiment_paths
+from QELM.NQS.pipeline import run_pipeline
+from QELM.NQS.seed import set_seed
+from QELM.NQS.selection import format_selection, load_secrets
 
 
 @hydra.main(version_base="1.3", config_path="conf", config_name="config")

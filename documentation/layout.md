@@ -4,29 +4,30 @@
 | --- | --- |
 | `conf/` | Hydra YAML: `config.yaml` plus groups `sim_type`, `training`, and `evaluation` |
 | `main.py` | Entrypoint. Seeds NumPy, loads `.env`, prints the selection, and runs the pipeline |
-| `src/QRC/NQS/models/` | `IsingModel` (dense Hamiltonian built with NetKet), `KitaevModel` scaffold, and the time-evolution stub |
-| `src/QRC/NQS/variational/` | NetKet 3 building blocks: Hilbert space, chain, Ising Hamiltonian, magnetization, RBM, variational states, `build_nqs(cfg)` |
-| `src/QRC/NQS/measurements/` | Reservoir Hamiltonian `h Σ Z_i + Σ_{i<j} J_ij X_i X_j` and observables |
-| `src/QRC/NQS/dynamics/` | Exact evolution (`expm_multiply`), TDVP driver, TDVP-vs-ED baseline. See [Dynamics](dynamics.md) |
-| `src/QRC/NQS/embedding/` | Ground-state preparation by VMC (`VMCGroundStatePreparation`). See [VMC](vmc.md) |
-| `src/QRC/NQS/evaluation/QGT.py` | Quantum geometric tensor analysis. See [QGT](qgt.md) |
-| `src/QRC/NQS/evaluation/representations.py` | SVD of the RBM weights. See [Hidden representations](representations.md) |
-| `src/QRC/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
-| `src/QRC/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
-| `src/QRC/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |
-| `src/QRC/NQS/training/` | Trainer scaffolds (`RidgeRegression`, `Readout`) |
-| `src/QRC/NQS/evaluation/` | Metric and plot scaffolds |
-| `src/QRC/NQS/pipeline.py` | Routes sim type to a model, a trainer, and an evaluator, then saves a checkpoint |
-| `src/QRC/NQS/checkpoint.py` | Writes the `.npz` checkpoint |
-| `src/QRC/NQS/seed.py` | Reads `seed` from the composed config |
-| `src/QRC/NQS/selection.py` | Loads `.env` and formats the selection line |
+| `src/QELM/NQS/models/` | `IsingModel` (dense Hamiltonian built with NetKet), `KitaevModel` scaffold, and the time-evolution stub |
+| `src/QELM/NQS/variational/` | NetKet 3 building blocks: Hilbert space, chain, Ising Hamiltonian, magnetization, RBM, variational states, `build_nqs(cfg)` |
+| `src/QELM/NQS/measurements/` | Reservoir Hamiltonian `h Σ Z_i + Σ_{i<j} J_ij X_i X_j` and observables |
+| `src/QELM/NQS/dynamics/` | Exact evolution (`expm_multiply`), TDVP driver, TDVP-vs-ED baseline. See [Dynamics](dynamics.md) |
+| `src/QELM/NQS/embedding/` | Ground-state preparation by VMC (`VMCGroundStatePreparation`). See [VMC](vmc.md) |
+| `src/QELM/NQS/evaluation/QGT.py` | Quantum geometric tensor analysis. See [QGT](qgt.md) |
+| `src/QELM/NQS/evaluation/representations.py` | SVD of the RBM weights. See [Hidden representations](representations.md) |
+| `src/QELM/NQS/qelm/` | QELM feature map (`QELMReservoir`, `feature_matrix`) and `RidgeReadout`. See [QELM](qelm.md) |
+| `src/QELM/NQS/utils/makeplots.py` | Every figure of the project. Writes into the run's `plots/` folder |
+| `src/QELM/NQS/utils/outputs.py` | Find and load runs under `outputs/` (used by the notebooks) |
+| `src/QELM/NQS/paths.py` | Run folder layout: `exp/`, `logs/`, `plots/` |
+| `src/QELM/NQS/training/` | Trainer scaffolds (`RidgeRegression`, `Readout`) |
+| `src/QELM/NQS/evaluation/` | Metric and plot scaffolds |
+| `src/QELM/NQS/pipeline.py` | Routes sim type to a model, a trainer, and an evaluator, then saves a checkpoint |
+| `src/QELM/NQS/checkpoint.py` | Writes the `.npz` checkpoint |
+| `src/QELM/NQS/seed.py` | Reads `seed` from the composed config |
+| `src/QELM/NQS/selection.py` | Loads `.env` and formats the selection line |
 | `data/` | Local datasets. Gitignored, and not created by the package |
 | `notebooks/00_outputs_starter.ipynb` | Loads the latest run of an experiment from the root `outputs/` |
 | `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics, N=6, h=10, T=5 |
 | `notebooks/series.ipynb` | Plots a local `data/series.npy` into `outputs/series.png` |
 | `tests/` | pytest |
 
-Import the library as `QRC.NQS`.
+Import the library as `QELM.NQS`.
 
 ## What one run does
 

@@ -35,7 +35,7 @@ outputs/<experiment_name>/<YYYY-MM-DD_HH-MM-SS>/
 │   └── nqs_variables.msgpack    Flax variables of the variational state
 ├── logs/
 │   └── main.log                 Hydra job log
-└── plots/                       figures from QRC.NQS.utils.makeplots
+└── plots/                       figures from QELM.NQS.utils.makeplots
 ```
 
 `main.py` creates `exp/`, `logs/` and `plots/` at startup. Choose the experiment folder with `experiment_name=my_study`. Reload the NQS variables with `flax.serialization.from_bytes(state.variables, path.read_bytes())`.

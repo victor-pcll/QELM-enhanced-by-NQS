@@ -1,6 +1,6 @@
 # Quantum geometric tensor
 
-`QRC.NQS.evaluation.QGT` analyzes the geometry of the variational manifold. For log-derivatives `O_k(s) = ∂ log ψ_θ(s) / ∂θ_k`, the quantum geometric tensor is
+`QELM.NQS.evaluation.QGT` analyzes the geometry of the variational manifold. For log-derivatives `O_k(s) = ∂ log ψ_θ(s) / ∂θ_k`, the quantum geometric tensor is
 
 ```text
 S_kl = <O_k* O_l> − <O_k*><O_l>        (averages over |ψ(s)|²)
@@ -12,7 +12,7 @@ It is Hermitian and positive semi-definite, and it splits into:
 - the **Berry curvature** `Ω = 2 Im S`. It is real antisymmetric and gives the geometric phase picked up around a closed loop in parameter space. It is zero for real parameters.
 
 ```python
-from QRC.NQS.evaluation.QGT import analyze_qgt, qgt_of_state
+from QELM.NQS.evaluation.QGT import analyze_qgt, qgt_of_state
 
 S = qgt_of_state(state, holomorphic=True)  # dense, no diagonal shift
 result = analyze_qgt(S)
@@ -32,7 +32,7 @@ At `W = b = 0`, `ψ(s) ∝ exp(Σ a_i s_i)` and `O_{b_j} = O_{W_ij} = tanh(0) = 
 
 ## Fidelity susceptibility
 
-`QRC.NQS.evaluation.fidelity.compute_fidelity_susceptibility(S, v)` returns `χ_F(v) = v† S v`: the curvature of the infidelity when the parameters move by `ε v`:
+`QELM.NQS.evaluation.fidelity.compute_fidelity_susceptibility(S, v)` returns `χ_F(v) = v† S v`: the curvature of the infidelity when the parameters move by `ε v`:
 
 ```text
 1 − |<ψ(θ)|ψ(θ + ε v)>|² = ε² χ_F(v) + O(ε³)

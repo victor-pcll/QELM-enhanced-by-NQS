@@ -1,9 +1,9 @@
 # Ground-state preparation (VMC)
 
-`QRC.NQS.embedding.VMCGroundStatePreparation` optimizes a sampled RBM state (`nk.vqs.MCState`) towards the ground state of a Hamiltonian with NetKet's `VMC_SR` driver. Stochastic reconfiguration is imaginary-time evolution projected on the variational manifold.
+`QELM.NQS.embedding.VMCGroundStatePreparation` optimizes a sampled RBM state (`nk.vqs.MCState`) towards the ground state of a Hamiltonian with NetKet's `VMC_SR` driver. Stochastic reconfiguration is imaginary-time evolution projected on the variational manifold.
 
 ```python
-from QRC.NQS.embedding import VMCGroundStatePreparation, VMCSettings
+from QELM.NQS.embedding import VMCGroundStatePreparation, VMCSettings
 
 prep = VMCGroundStatePreparation(hamiltonian, mc_state, settings=VMCSettings())
 state = prep.run()  # same object, optimized in place
@@ -44,7 +44,7 @@ A larger step can stop on an excited eigenstate. With `learning_rate=5e-2` and t
 
 ## Energy variance
 
-`QRC.NQS.evaluation.compute_energy_variance(state, H)` returns `σ²_E = <H²> − <H>²` from NetKet's local-energy statistics (`state.expect(H).variance`):
+`QELM.NQS.evaluation.compute_energy_variance(state, H)` returns `σ²_E = <H²> − <H>²` from NetKet's local-energy statistics (`state.expect(H).variance`):
 
 ```text
 σ²_E = Σ_s |ψ(s)|² |E_loc(s) − <H>|²,   E_loc(s) = <s|H|ψ> / <s|ψ>

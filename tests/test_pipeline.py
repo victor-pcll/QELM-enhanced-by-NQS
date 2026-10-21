@@ -3,10 +3,10 @@ from pathlib import Path
 from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
-from QRC.NQS.evaluation import evaluate
-from QRC.NQS.models import IsingModel, KitaevModel
-from QRC.NQS.pipeline import resolve_pipeline, run_pipeline
-from QRC.NQS.training import Readout, RidgeRegression
+from QELM.NQS.evaluation import evaluate
+from QELM.NQS.models import IsingModel, KitaevModel
+from QELM.NQS.pipeline import resolve_pipeline, run_pipeline
+from QELM.NQS.training import Readout, RidgeRegression
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_DIR = REPO_ROOT / "conf"

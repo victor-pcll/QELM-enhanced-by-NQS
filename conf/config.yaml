@@ -4,7 +4,7 @@ defaults:
   - evaluation: default
   - nqs: rbm
   - vmc: default
-  - override hydra/job_logging: qrc
+  - override hydra/job_logging: qelm
   - _self_
 
 # Name of the experiment folder under outputs/. Override with

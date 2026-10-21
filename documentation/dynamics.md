@@ -36,7 +36,7 @@ with Pauli matrices. `J` is a scalar (uniform couplings) or a real symmetric `(N
 | `diag_shift=0`, SVD | 1.2e-3 | 0.9995 |
 | `diag_shift=1e-8`, `pinv_smooth` | 3e-6 | 0.9999999 |
 
-RK4 and RK45 give the same error, so the error comes from the projection and the regularization, not from the time step. The default is `1e-4` (issue #17), the same as the VMC: it keeps the QGT solve stable but costs about 1e-3 on `<Z>`. The baseline, which must match ED to `1e-3`, passes `diag_shift=1e-6` explicitly (as does the notebook). `tests/QRC/NQS/dynamics/test_tdvp_baseline.py` measures both errors, so the bias stays documented by a test.
+RK4 and RK45 give the same error, so the error comes from the projection and the regularization, not from the time step. The default is `1e-4` (issue #17), the same as the VMC: it keeps the QGT solve stable but costs about 1e-3 on `<Z>`. The baseline, which must match ED to `1e-3`, passes `diag_shift=1e-6` explicitly (as does the notebook). `tests/QELM/NQS/dynamics/test_tdvp_baseline.py` measures both errors, so the bias stays documented by a test.
 
 ## Baseline
 

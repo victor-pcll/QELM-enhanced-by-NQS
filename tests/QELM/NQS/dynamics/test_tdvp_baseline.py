@@ -35,7 +35,9 @@ def run(tmp_path_factory: pytest.TempPathFactory) -> tuple[BaselineResult, Path]
         J=1.0,
         T=T,
         seed=BASELINE_SEED,
-        settings=TDVPSettings(dt=DT, integrator="RK45", linear_solver="svd"),
+        settings=TDVPSettings(
+            dt=DT, integrator="RK45", diag_shift=1e-6, linear_solver="svd"
+        ),
         paths=paths,
     )
     return result, paths.root
@@ -91,3 +93,31 @@ def test_outputs_are_written(run) -> None:
     np.testing.assert_allclose(log["Magnetization"]["iters"], result.tdvp_times)
     with np.load(paths.exp / "tdvp_vs_ed.npz") as archive:
         np.testing.assert_array_equal(archive["exact"], result.exact)
+
+
+def test_default_diag_shift() -> None:
+    assert TDVPSettings().diag_shift == 1e-4
+
+
+def test_default_shift_bias_is_documented(run) -> None:
+    """The default shift (1e-4) biases the trajectory by about 1e-3.
+
+    Tikhonov regularization replaces S^-1 by (S + eps)^-1, which damps the
+    projected velocity along weak QGT directions. The error must grow with
+    eps, stay at the 1e-3 level documented in documentation/dynamics.md,
+    and leave the state close to the exact one.
+    """
+    precise, _ = run
+    default = tdvp_vs_exact(
+        n_spins=N,
+        h=H_FIELD,
+        J=1.0,
+        T=T,
+        seed=BASELINE_SEED,
+        settings=TDVPSettings(dt=DT, integrator="RK45", linear_solver="svd"),
+    )
+    error_default = np.max(np.abs(default.tdvp - default.exact))
+    error_precise = np.max(np.abs(precise.tdvp - precise.exact))
+    assert error_precise < error_default
+    assert 5e-4 < error_default < 2e-3
+    assert default.final_fidelity == pytest.approx(1.0, abs=1e-3)

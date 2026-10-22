@@ -235,6 +235,65 @@ def plot_exact_vs_tdvp(
     return save_figure(fig, filename, directory)
 
 
+def plot_field_scan(
+    fields: Mapping[str, ArrayLike],
+    values: Mapping[str, Mapping[str, ArrayLike]],
+    *,
+    panels: Mapping[str, str],
+    filename: str,
+    directory: Path | str | None = None,
+    title: str = "",
+) -> Path:
+    """Plot quantities against the field ``h``, one panel per quantity.
+
+    Used for the accumulated TDVP-vs-ED errors and for the TDVP wall time.
+    Each curve (for instance one per system size) is drawn on every panel,
+    on log-log axes. Zero values are clipped to ``1e-16``.
+
+    Args:
+        fields: Curve label (e.g. ``"N=4"``) mapped to its fields ``h``.
+        values: Same labels, mapped to ``{key: values}`` with one value
+            per field.
+        panels: Key mapped to its axis label, in panel order.
+        filename: Output file name.
+        directory: Target folder, see :func:`plots_dir`.
+        title: Figure title.
+
+    Returns:
+        Path of the written figure.
+
+    Raises:
+        ValueError: If labels differ, a panel is missing, or shapes differ.
+    """
+    if set(fields) != set(values):
+        raise ValueError("fields and values must have the same curve labels.")
+    if not panels:
+        raise ValueError("panels must not be empty.")
+    n_cols = min(3, len(panels))
+    n_rows = -(-len(panels) // n_cols)
+    fig = Figure(figsize=(4.2 * n_cols, 3.4 * n_rows))
+    axes = np.atleast_1d(fig.subplots(n_rows, n_cols, squeeze=False)).ravel()
+    for ax, (key, ylabel) in zip(axes, panels.items(), strict=False):
+        for label, h in fields.items():
+            x = np.asarray(h, dtype=float)
+            if key not in values[label]:
+                raise ValueError(f"Curve {label!r} has no {key!r} values.")
+            y = np.asarray(values[label][key], dtype=float)
+            if x.shape != y.shape:
+                raise ValueError(f"{label}/{key}: {y.shape} values, {x.shape} fields.")
+            ax.loglog(x, np.maximum(y, 1e-16), "o-", label=label)
+        ax.set_xlabel("h")
+        ax.set_ylabel(ylabel)
+        ax.grid(True, which="both", linestyle="--", alpha=0.5)
+    for ax in axes[len(panels) :]:
+        ax.set_visible(False)
+    axes[0].legend()
+    if title:
+        fig.suptitle(title)
+    fig.tight_layout()
+    return save_figure(fig, filename, directory)
+
+
 def plot_energy_variance(
     iterations: ArrayLike,
     variance: ArrayLike,
@@ -335,6 +394,7 @@ def plot_singular_values(
 
 
 __all__ = [
+    "plot_field_scan",
     "plot_convergence",
     "plot_energy_variance",
     "plot_exact_vs_tdvp",

@@ -40,7 +40,35 @@ RK4 and RK45 give the same error, so the error comes from the projection and the
 
 ## Baseline
 
-`tdvp_vs_exact(n_spins=6, h=10.0, J=1.0, T=5.0, seed=45, settings=..., paths=...)` starts both evolutions from the same seeded RBM state, held exactly as a `FullSumState`. It returns both trajectories, the energies and the final fidelity. With `paths`, it writes `exp/tdvp.log`, `exp/tdvp_vs_ed.npz` and `plots/tdvp_vs_ed.png`. `notebooks/01_tdvp_vs_ed_baseline.ipynb` runs it for T=5. The CI test `tests/QELM/NQS/dynamics/test_tdvp_baseline.py` runs it for T=0.5.
+`tdvp_vs_exact(n_spins=6, h=10.0, J=1.0, T=5.0, seed=45, settings=..., paths=...)` starts both evolutions from the same seeded RBM state, held exactly as a `FullSumState`. It returns both trajectories, the energies and the final fidelity. With `paths`, it writes `exp/tdvp.log`, `exp/tdvp_vs_ed.npz` and `plots/tdvp_vs_ed.png`. `notebooks/results/01_tdvp_vs_ed_baseline.ipynb` runs it for T=5. The CI test `tests/QELM/NQS/dynamics/test_tdvp_baseline.py` runs it for T=0.5.
+
+## Accumulated error against the field (issue #23)
+
+`QELM.NQS.dynamics.accumulated_error` measures how much a TDVP trajectory drifts from ED over a whole run, not only at one time:
+
+```text
+E_O(T) = ∫_0^T |<O>_TDVP(t) - <O>_ED(t)| dt
+```
+
+with the trapezoidal rule on the shared grid (`accumulated_absolute_error`). Its unit is `[O] × time`; divide by `T` for the time average.
+
+`compare_with_exact(n_spins, h, J, T, seed, settings)` starts both evolutions from the seeded RBM, as the baseline does, and calls `run_tdvp(..., record_states=True)`. With that flag, a NetKet callback stores `state.to_array()` at every grid time (NetKet calls it only at the `tstops`, before the step leaves them). A test checks that these vectors give back NetKet's own logged observables to round-off. Every observable is then evaluated from the state vectors with the same code for both trajectories (`trajectory_observables`):
+
+| Key | Quantity |
+| --- | --- |
+| `energy` | `<H>` |
+| `magnetization_z` | `(1/N) Σ_i <Z_i>` |
+| `sigma_x`, `sigma_z` | `<X_i>`, `<Z_i>`; the error is averaged over sites, `(1/N) Σ_i E_{P_i}` |
+| `entropy` | Half-chain von Neumann entropy of sites `0..N/2-1`, in nats, from the Schmidt values |
+| `infidelity` | `∫ (1 - F) dt` with `F = |<ψ_ED|ψ_TDVP>|^2` |
+
+The entropy reshapes the amplitudes with site 0 as the most significant bit, which is NetKet's ordering; a test places a Bell pair on chosen sites to check it. `accumulated_error_vs_field(n_spins, fields, T, ...)` repeats the comparison for each `h` and returns a `FieldSweep` (errors, final fidelity and TDVP wall time per field), which `save`/`load` as `.npz`. `plot_field_scan` draws one panel per quantity, one curve per `N`.
+
+The tests (`tests/QELM/NQS/dynamics/test_accumulated_error.py`) check the integral on known errors, the entropy on product, Bell, GHZ and random states (Page bound), the local Paulis on product states with known energy, exact constraints on a real comparison (zero error at `t = 0`, `F ≤ 1`, `|mean Δ| ≤ mean |Δ|`, energy conservation), and the free-spin case `J = 0`. There `H = h Σ Z_i` only rotates each spin; `<Z_i>` and `S` are conserved, and `ψ(s, t) = e^{-iht Σ s_i} ψ(s, 0)` is still an RBM (visible biases shifted by `-iht`), so TDVP has no projection error.
+
+`notebooks/results/01_tdvp_vs_ed_baseline.ipynb` runs the scan for N = 4, 6, 8 and h from 0.1 to 10 at T = 2.
+
+**Read `ψ(T)` from the recorded states.** NetKet's driver can take one step past the last grid time when `T / dt` rounds just below an integer: with `dt = 5e-3, T = 0.1` the grid ends at `0.09999999999999999` and the driver stops at `t = 0.105`, so `state.to_array()` after the run is `ψ(T + dt)` (infidelity `1e-4` with the exact `ψ(T)` on N = 4). The grids used here (`dt = 1e-3`, `T = 0.5, 2, 5`) do not trigger it, but the recorded states are always on the grid.
 
 ## Loschmidt echo (reversibility test)
 

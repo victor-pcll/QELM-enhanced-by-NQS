@@ -16,7 +16,7 @@ from QELM.NQS.utils.outputs import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-STARTER = REPO_ROOT / "notebooks" / "00_outputs_starter.ipynb"
+STARTER = REPO_ROOT / "notebooks" / "results" / "00_outputs_starter.ipynb"
 
 
 def _fake_run(outputs: Path, experiment: str, stamp: str) -> ExperimentPaths:
@@ -31,6 +31,8 @@ def _fake_run(outputs: Path, experiment: str, stamp: str) -> ExperimentPaths:
 
 def test_find_repo_root_from_notebooks_folder() -> None:
     assert find_repo_root(REPO_ROOT / "notebooks") == REPO_ROOT
+    assert find_repo_root(REPO_ROOT / "notebooks" / "results") == REPO_ROOT
+    assert find_repo_root(REPO_ROOT / "notebooks" / "benchmarks") == REPO_ROOT
 
 
 def test_find_repo_root_fails_outside_a_project(tmp_path: Path) -> None:
@@ -66,9 +68,9 @@ def test_starter_notebook_reads_root_outputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     (tmp_path / "pyproject.toml").write_text("")
-    (tmp_path / "notebooks").mkdir()
+    (tmp_path / "notebooks" / "results").mkdir(parents=True)
     _fake_run(tmp_path / "outputs", "default", "2026-01-01_00-00-00")
-    monkeypatch.chdir(tmp_path / "notebooks")
+    monkeypatch.chdir(tmp_path / "notebooks" / "results")
 
     notebook = json.loads(STARTER.read_text())
     namespace: dict[str, object] = {}

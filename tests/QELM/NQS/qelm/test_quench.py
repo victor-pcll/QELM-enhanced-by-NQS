@@ -353,6 +353,7 @@ def test_vmc_finds_e_per_spin_equal_minus_h(hilbert, axis, tmp_path) -> None:
         state,
         settings=VMCSettings(n_iter=200, n_samples=1024),
         paths=ExperimentPaths.at(tmp_path).create(),
+        track_exact=True,
     )
     prep.run()
     exact = nk.vqs.FullSumState(hilbert, state.model, variables=state.variables)
@@ -363,3 +364,20 @@ def test_vmc_finds_e_per_spin_equal_minus_h(hilbert, axis, tmp_path) -> None:
     psi = psi / np.linalg.norm(psi)
     fidelity = abs(np.vdot(quench_ground_state(hilbert, axis), psi)) ** 2
     assert fidelity > 0.99
+    # Acceptance of single-spin flips: |psi|^2 is uniform for |+>^N, so every
+    # move is accepted; it concentrates on one configuration for |0>^N.
+    acc = prep.acceptance
+    assert acc.shape == prep.iterations.shape
+    assert np.all((acc >= 0) & (acc <= 1))
+    if axis == "x":
+        assert acc[-1] > 0.99
+    else:
+        assert acc[-1] < 0.1 * acc[0]
+    # The exact curves are those of the parameters of each logged MC energy.
+    assert prep.exact_energy.shape == prep.exact_variance.shape == acc.shape
+    assert np.all(prep.exact_energy >= N * -H_FIELD - 1e-10)
+    assert prep.exact_energy[-1] / N == pytest.approx(e_per_spin, abs=1e-3)
+    assert np.all(prep.exact_variance >= -1e-12)
+    np.testing.assert_allclose(
+        prep.exact_energy[0], prep.energy[0], atol=5 * prep.energy_error[0] + 1e-8
+    )

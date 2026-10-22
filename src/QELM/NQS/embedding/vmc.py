@@ -77,7 +77,8 @@ class VMCGroundStatePreparation:
     - ``vmc.log``: energy statistics (mean, error, variance, R̂) per
       iteration;
     - ``vmc_energy.npz``: ``iters``, ``energy``, ``energy_error`` and
-      ``energy_variance`` arrays;
+      ``energy_variance``, ``acceptance`` arrays (and ``exact_energy``,
+      ``exact_variance`` with ``track_exact``, empty otherwise);
     - ``vmc.mpack``: the optimized variables.
 
     The energy variance per iteration is also plotted on a log scale to
@@ -92,6 +93,12 @@ class VMCGroundStatePreparation:
         energy: Mean energy per iteration after :meth:`run`.
         energy_error: Statistical error of the mean per iteration.
         energy_variance: Sample variance of the local energy per iteration.
+        acceptance: Metropolis acceptance rate of the samples drawn at each
+            iteration (NetKet resets the counters when the parameters
+            change, so it is not a running average).
+        exact_energy: Exact ``<H>`` per iteration (``track_exact`` only).
+        exact_variance: Exact ``<H^2> - <H>^2`` per iteration
+            (``track_exact`` only).
     """
 
     def __init__(
@@ -103,6 +110,7 @@ class VMCGroundStatePreparation:
         settings: VMCSettings | None = None,
         paths: ExperimentPaths | None = None,
         metadata: Mapping[str, Any] | None = None,
+        track_exact: bool = False,
     ) -> None:
         """Store the NetKet components.
 
@@ -116,6 +124,12 @@ class VMCGroundStatePreparation:
                 fallback run under ``outputs/``).
             metadata: Extra JSON-serializable entries for
                 ``hyperparameters.json``, such as the system parameters.
+            track_exact: Also record, at each iteration, ``<H>`` and
+                ``<H^2> - <H>^2`` summed exactly over the ``2**N``
+                configurations (small ``N`` only). The Monte Carlo
+                estimates can miss what the sampler never visits: when
+                ``|psi|^2`` sits on one configuration they read an exact
+                eigenstate (zero variance) while the state is not one.
 
         Raises:
             TypeError: If ``variational_state`` is not an ``MCState``.
@@ -132,6 +146,10 @@ class VMCGroundStatePreparation:
         self.energy = np.zeros(0)
         self.energy_error = np.zeros(0)
         self.energy_variance = np.zeros(0)
+        self.acceptance = np.zeros(0)
+        self.track_exact = track_exact
+        self.exact_energy = np.zeros(0)
+        self.exact_variance = np.zeros(0)
 
     @classmethod
     def from_config(
@@ -204,10 +222,27 @@ class VMCGroundStatePreparation:
         )
         memory = nk.logging.RuntimeLog()
         json_log = nk.logging.JsonLog(str(paths.exp / LOG_PREFIX))
+        acceptance: list[float] = []
+        exact: list[tuple[float, float]] = []
+
+        def record(step: int, log_data: dict, driver: Any) -> bool:
+            # Called after the samples of this iteration are drawn and before
+            # the parameters are updated: same parameters as the logged energy.
+            state = driver.state
+            acceptance.append(float(state.sampler_state.acceptance))
+            if self.track_exact:
+                full = nk.vqs.FullSumState(
+                    state.hilbert, state.model, variables=state.variables
+                )
+                stats = full.expect(self.hamiltonian)
+                exact.append((float(np.real(stats.mean)), float(stats.variance)))
+            return True
+
         driver.run(
             self.settings.n_iter,
             out=(memory, json_log),
             show_progress=show_progress,
+            callback=record,
         )
         json_log.flush(self.variational_state)
 
@@ -216,12 +251,19 @@ class VMCGroundStatePreparation:
         self.energy = np.asarray(history.Mean).real.astype(float)
         self.energy_error = np.asarray(history.Sigma, dtype=float)
         self.energy_variance = np.asarray(history.Variance, dtype=float)
+        self.acceptance = np.asarray(acceptance, dtype=float)
+        exact_array = np.asarray(exact, dtype=float).reshape(-1, 2)
+        self.exact_energy = exact_array[:, 0]
+        self.exact_variance = exact_array[:, 1]
         np.savez(
             paths.exp / ENERGY_FILENAME,
             iters=self.iterations,
             energy=self.energy,
             energy_error=self.energy_error,
             energy_variance=self.energy_variance,
+            acceptance=self.acceptance,
+            exact_energy=self.exact_energy,
+            exact_variance=self.exact_variance,
         )
         plot_energy_variance(
             self.iterations,

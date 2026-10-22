@@ -68,7 +68,7 @@ The tests (`tests/QELM/NQS/dynamics/test_accumulated_error.py`) check the integr
 
 `notebooks/results/01_tdvp_vs_ed_baseline.ipynb` runs the scan for N = 4, 6, 8 and h from 0.1 to 10 at T = 2.
 
-**Read `ψ(T)` from the recorded states.** NetKet's driver can take one step past the last grid time when `T / dt` rounds just below an integer: with `dt = 5e-3, T = 0.1` the grid ends at `0.09999999999999999` and the driver stops at `t = 0.105`, so `state.to_array()` after the run is `ψ(T + dt)` (infidelity `1e-4` with the exact `ψ(T)` on N = 4). The grids used here (`dt = 1e-3`, `T = 0.5, 2, 5`) do not trigger it, but the recorded states are always on the grid.
+**NetKet can step past `T`; `run_tdvp` undoes it.** The driver adds up its steps, and its end test is a strict `t < T` while its stop test is `np.isclose`. With `dt = 5e-3, T = 0.1` the sum reaches `0.09999999999999999`: the last stop is taken (observables logged), but the run is not over, and with no stop left the next step is not capped, so the driver ends at `t = 0.105`. The state was then `ψ(T + dt)` (infidelity `1e-4` with the exact `ψ(T)` on N = 4). `run_tdvp` keeps the parameters at each stop in a callback and puts back those of the last grid time after the run; it raises if the last stop is not `T`. `tests/QELM/NQS/dynamics/test_tdvp_final_time.py` checks the state against ED for three grids, and a guard test fails if a NetKet upgrade stops overshooting. The project grids (`dt = 1e-3`, `T = 0.5, 2, 5`) never triggered it, so earlier results are unchanged.
 
 ## Loschmidt echo (reversibility test)
 

@@ -211,12 +211,12 @@ def test_recorded_states_reproduce_netket_log() -> None:
         expectation_values(result.states, H), result.observables["E"], atol=1e-12
     )
     np.testing.assert_allclose(np.linalg.norm(result.states, axis=1), 1.0)
-    # The last recorded vector is psi(T): it matches the exact evolution.
-    # (state.to_array() after the run is not used: NetKet can take one step
-    # past T, see the note in documentation/dynamics.md.)
+    # The last recorded vector is psi(T): it matches the exact evolution,
+    # and it is the state left by run_tdvp (see test_tdvp_final_time.py).
     exact = exact_time_evolution(H, result.states[0], result.times)
     fidelity = np.abs(np.vdot(exact[-1], result.states[-1])) ** 2
     assert fidelity == pytest.approx(1.0, abs=1e-6)
+    np.testing.assert_allclose(result.states[-1], state.to_array(), atol=1e-14)
 
 
 def test_states_are_not_recorded_by_default() -> None:

@@ -277,6 +277,131 @@ def plot_energy_variance(
     )
 
 
+def plot_vmc_diagnostics(
+    iterations: ArrayLike,
+    energy_per_spin: ArrayLike,
+    *,
+    target: float,
+    variance: ArrayLike,
+    acceptance: ArrayLike,
+    energy_error: ArrayLike | None = None,
+    exact_energy_per_spin: ArrayLike | None = None,
+    exact_variance: ArrayLike | None = None,
+    filename: str = "vmc_diagnostics.png",
+    directory: Path | str | None = None,
+    floor: float = 1e-16,
+    title: str = "",
+) -> Path:
+    """Plot four VMC diagnostics side by side against the iterations.
+
+    1. ``E / N`` with its error bars and the exact ``E_0 / N`` dashed;
+    2. the relative error ``|E/N - E_0/N| / |E_0/N|``, log scale;
+    3. the energy variance ``sigma_E^2``, log scale (``0`` for an exact
+       eigenstate);
+    4. the Metropolis acceptance rate, in ``[0, 1]``.
+
+    Values below ``floor`` are drawn at ``floor`` on the log panels. The
+    exact (full-sum) curves, if given, are drawn next to the Monte Carlo
+    ones on the first three panels.
+
+    Args:
+        iterations: Iteration indices, shape ``(n_iter,)``.
+        energy_per_spin: ``<H> / N`` per iteration.
+        target: Exact ground-state energy per spin ``E_0 / N``, non-zero.
+        variance: Energy variance per iteration (of ``H``, not ``H / N``).
+        acceptance: Acceptance rate per iteration.
+        energy_error: Statistical error of ``E / N``, if given.
+        exact_energy_per_spin: Exact ``<H> / N`` per iteration, if given.
+        exact_variance: Exact ``<H^2> - <H>^2`` per iteration, if given.
+        filename: Output file name.
+        directory: Target folder, see :func:`plots_dir`.
+        floor: Smallest value drawn on the log panels.
+        title: Figure title.
+
+    Returns:
+        Path of the written figure.
+
+    Raises:
+        ValueError: If shapes differ, ``target`` is zero, a variance is
+            negative or an acceptance is outside ``[0, 1]``.
+    """
+    x = np.asarray(iterations, dtype=float)
+    e = np.asarray(energy_per_spin, dtype=float)
+    v = np.asarray(variance, dtype=float)
+    acc = np.asarray(acceptance, dtype=float)
+    if not (x.shape == e.shape == v.shape == acc.shape):
+        raise ValueError(
+            f"Shapes differ: {x.shape}, {e.shape}, {v.shape}, {acc.shape}."
+        )
+    if target == 0:
+        raise ValueError("The relative error needs a non-zero target.")
+    if np.any(v < 0):
+        raise ValueError("An energy variance cannot be negative.")
+    if np.any((acc < 0) | (acc > 1)):
+        raise ValueError("An acceptance rate is in [0, 1].")
+    exact_e = None
+    if exact_energy_per_spin is not None:
+        exact_e = np.asarray(exact_energy_per_spin, dtype=float)
+    exact_v = None if exact_variance is None else np.asarray(exact_variance, float)
+    for extra in (exact_e, exact_v):
+        if extra is not None and extra.shape != x.shape:
+            raise ValueError(f"Shapes differ: {x.shape}, {extra.shape}.")
+    if exact_v is not None and np.any(exact_v < -1e-12):
+        raise ValueError("An energy variance cannot be negative.")
+
+    def relative(values: np.ndarray) -> np.ndarray:
+        return np.abs(values - target) / abs(target)
+
+    fig = Figure(figsize=(20, 4.5))
+    axes = fig.subplots(1, 4)
+    if energy_error is None:
+        axes[0].plot(x, e, marker=".", ms=3, lw=1, label=r"VMC $E/N$")
+    else:
+        axes[0].errorbar(
+            x,
+            e,
+            yerr=np.asarray(energy_error, dtype=float),
+            marker=".",
+            ms=3,
+            lw=1,
+            label=r"VMC $E/N$",
+        )
+    if exact_e is not None:
+        axes[0].plot(x, exact_e, lw=1.5, label=r"exact $E/N$ (full sum)")
+    axes[0].axhline(
+        target, color="k", linestyle="--", label=rf"exact $E_0/N = {target:g}$"
+    )
+    axes[0].set_ylabel(r"$E / N$")
+    axes[0].legend()
+    axes[1].plot(x, np.maximum(relative(e), floor), marker=".", ms=3, lw=1, label="MC")
+    if exact_e is not None:
+        axes[1].plot(x, np.maximum(relative(exact_e), floor), lw=1.5, label="exact")
+        axes[1].legend()
+    axes[1].set_yscale("log")
+    axes[1].set_ylabel(r"$|E/N - E_0/N| \,/\, |E_0/N|$")
+    axes[2].plot(x, np.maximum(v, floor), marker=".", ms=3, lw=1, label="MC")
+    if exact_v is not None:
+        axes[2].plot(x, np.maximum(exact_v, floor), lw=1.5, label="exact")
+        axes[2].legend()
+    axes[2].set_yscale("log")
+    axes[2].set_ylabel(r"$\sigma_E^2 = \langle H^2 \rangle - \langle H \rangle^2$")
+    axes[3].plot(x, acc, marker=".", ms=3, lw=1)
+    axes[3].set_ylim(0.0, 1.05)
+    axes[3].set_ylabel("acceptance rate")
+    for ax, name in zip(
+        axes,
+        ("energy per spin", "relative error", "energy variance", "acceptance"),
+        strict=True,
+    ):
+        ax.set_xlabel("iteration")
+        ax.set_title(name)
+        ax.grid(True, linestyle="--", alpha=0.6)
+    if title:
+        fig.suptitle(title)
+    fig.tight_layout()
+    return save_figure(fig, filename, directory)
+
+
 def plot_singular_values(
     singular_values: ArrayLike,
     *,
@@ -340,6 +465,7 @@ __all__ = [
     "plot_exact_vs_tdvp",
     "plot_singular_values",
     "plot_time_series",
+    "plot_vmc_diagnostics",
     "plots_dir",
     "save_figure",
 ]

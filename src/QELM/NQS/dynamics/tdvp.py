@@ -98,6 +98,13 @@ def run_tdvp(
     Solves the TDVP equation ``S dθ/dt = -i F`` with the dense Jacobian
     QGT. ``state`` is updated in place: after the call it holds ``ψ(T)``.
 
+    NetKet's driver can take one step past ``T``: it sums its steps, and
+    when the sum lands one rounding error below ``T`` (``dt=5e-3, T=0.1``
+    gives ``0.09999999999999999``) the last stop is recognized but its strict
+    ``t < T`` end test is not, so it makes a further, uncapped step. The
+    parameters at the last grid time are therefore kept by a callback and
+    put back after the run.
+
     Args:
         hamiltonian: Hermitian NetKet operator.
         state: Variational state, modified in place.
@@ -132,11 +139,15 @@ def run_tdvp(
         Path(log_path).parent.mkdir(parents=True, exist_ok=True)
         loggers.append(nk.logging.JsonLog(str(log_path), save_params=False))
     recorded: list[np.ndarray] = []
+    last_stop: dict[str, Any] = {}
 
     def record(step: Any, log_data: Any, drv: Any) -> bool:
         # NetKet calls this only at the stopping times (the grid), before
         # the step leaves them, so drv.state holds psi(t) at that time.
-        recorded.append(np.asarray(drv.state.to_array()))
+        last_stop["t"] = float(step)
+        last_stop["parameters"] = drv.state.parameters
+        if record_states:
+            recorded.append(np.asarray(drv.state.to_array()))
         return True
 
     driver.run(
@@ -145,8 +156,14 @@ def run_tdvp(
         obs=dict(observables),
         tstops=grid,
         show_progress=False,
-        callback=record if record_states else None,
+        callback=record,
     )
+    if not np.isclose(last_stop.get("t", np.nan), grid[-1], rtol=0, atol=1e-9):
+        raise RuntimeError(
+            f"TDVP last stopped at t={last_stop.get('t')}, not at T={grid[-1]}."
+        )
+    # Undo a step past T, if NetKet took one (see the docstring).
+    state.parameters = last_stop["parameters"]
     for logger in loggers[1:]:
         logger.flush()
 

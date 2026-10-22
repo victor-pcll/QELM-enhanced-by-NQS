@@ -22,6 +22,10 @@ wheels/
 # 2. Jupyter Notebooks
 # =========================
 .ipynb_checkpoints/
+# Ignore local scratch notebooks and experiments.
+# Only the .gitkeep is tracked, so the folder exists for every clone.
+notebooks/scratch/*
+!notebooks/scratch/.gitkeep
 # (Optionnel) Ignorer les outputs de notebooks si on utilise des outils comme nbstripout
 # *.ipynb
 

@@ -36,6 +36,7 @@ uv sync
 | `notebooks/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
 | `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics baseline |
 | `notebooks/series.ipynb` | Plot a local series from `data/`; the library call stays a scaffold |
+| `notebooks/scratch/` | Local sandbox for throwaway notebooks and scripts (gitignored, only `.gitkeep` is tracked) |
 | `main.py` | Entrypoint. Routes sim type → model → training → evaluation → NetKet setup |
 | `outputs/` | Hydra runs, `outputs/<experiment_name>/<timestamp>/{exp,logs,plots}` (gitignored) |
 

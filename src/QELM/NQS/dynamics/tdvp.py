@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -87,6 +87,7 @@ def run_tdvp(
     observables: Mapping[str, nk.operator.AbstractOperator],
     settings: TDVPSettings | None = None,
     log_path: Path | str | None = None,
+    callback: Callable[[Any, Any, Any], bool] | None = None,
 ) -> TDVPResult:
     """Evolve ``state`` in real time under ``hamiltonian`` from ``t0 = 0`` to ``T``.
 
@@ -101,6 +102,9 @@ def run_tdvp(
         settings: Numerical settings; defaults to :class:`TDVPSettings`.
         log_path: When given, NetKet also writes its JSON log to
             ``<log_path>.log`` (for instance in the run's ``exp/``).
+        callback: Passed to NetKet's ``driver.run``; called after every
+            step as ``callback(step, log_data, driver)`` and must return
+            ``True`` to continue (``driver.t`` is the current time).
 
     Returns:
         The recorded times and observables.
@@ -128,6 +132,7 @@ def run_tdvp(
         obs=dict(observables),
         tstops=grid,
         show_progress=False,
+        callback=callback if callback is not None else (lambda *_: True),
     )
     for logger in loggers[1:]:
         logger.flush()

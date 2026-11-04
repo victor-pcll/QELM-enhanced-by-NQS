@@ -27,7 +27,7 @@ uv sync
 | `src/QELM/NQS/models/` | Hamiltonians (Ising via NetKet, Kitaev scaffold) and time evolution |
 | `src/QELM/NQS/variational/` | NetKet 3 systems, RBM ansatz, variational states, `build_nqs(cfg)` |
 | `src/QELM/NQS/measurements/` | All-to-all reservoir Hamiltonian and observables |
-| `src/QELM/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline |
+| `src/QELM/NQS/dynamics/` | Exact evolution, TDVP, TDVP-vs-ED baseline, time-dependent Neural Galerkin (t-NQG) |
 | `src/QELM/NQS/embedding/` | Ground-state preparation by VMC |
 | `src/QELM/NQS/qelm/` | QELM feature map (TDVP or ED) and ridge readout |
 | `src/QELM/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
@@ -35,6 +35,7 @@ uv sync
 | `src/QELM/NQS/evaluation/` | Metrics and plot scaffolds |
 | `notebooks/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
 | `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics baseline |
+| `notebooks/benchmarks/benchmark_neural_galerkin_2026.ipynb` | Fig. 2 of the time-dependent Neural Galerkin paper: t-NQG vs TDVP vs ED (issue #24) |
 | `notebooks/series.ipynb` | Plot a local series from `data/`; the library call stays a scaffold |
 | `notebooks/scratch/` | Local sandbox for throwaway notebooks and scripts (gitignored, only `.gitkeep` is tracked) |
 | `main.py` | Entrypoint. Routes sim type → model → training → evaluation → NetKet setup |

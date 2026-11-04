@@ -78,6 +78,19 @@ The 6x6 run is limited by the 4 CPU cores of the session: about 1.5 h per field.
 
 At the critical point and in the ferromagnetic phase, t-NQG beats one TDVP RBM by 2-3x on `<σ^x>` and by about 6x on the loss. At `h = 5` a single RBM is already accurate (its loss is as low as that of t-NQG), and t-NQG (300 Adam steps per window) is limited by its optimization: it keeps a small systematic offset. `L(t)` of t-NQG peaks at the start of each window, where `ċ(0)` alone must match `-iHA_w`.
 
+6x6, `T = 0.6`, 200 Adam steps per window (`figure2_6x6.png`). There is no exact reference here. Up to `t ≈ 0.15` the 4x4 and 6x6 periodic lattices differ only through processes that wrap around the 4x4 torus, which enter at high order in `t`, so 4x4 ED is a short-time check:
+
+| h | Method | median `L/N` | max `\|E(t) - E(0)\|/N` | max `\|<σ^x> - ED_4x4\|`, `t ≤ 0.15` | wall |
+| --- | --- | --- | --- | --- | --- |
+| 5 | t-NQG, M = 18 | 1.7e-2 | 1.0e-1 | 5.9e-2 | 44 min |
+| 5 | TDVP, 1 RBM | 1.0e-3 | 1.9e-2 | 3.4e-3 | 17 min |
+| 3.044 | t-NQG, M = 18 | 1.1e-1 | 1.2e-1 | 3.6e-2 | 45 min |
+| 3.044 | TDVP, 1 RBM | 1.0e-2 | 2.1e-2 | 2.4e-3 | 17 min |
+| 2 | t-NQG, M = 18 | 2.0e-1 | 1.3e-1 | 3.8e-2 | 45 min |
+| 2 | TDVP, 1 RBM | 1.8e-2 | 2.3e-2 | 2.4e-3 | 17 min |
+
+**On 6x6, t-NQG is not converged with this budget.** Its loss is 10x that of TDVP, its energy drifts by 3-4 %, and it misses the short-time reference by several 1e-2. The method and the estimator are not at fault (they are exact checks in the tests, and the 4x4 runs converge), but 200 Adam steps from random RBMs do not reach a good minimum for N = 36: the loss scales with `N h^2` and the windows start far from it. A converged reproduction needs more steps (the paper does not say how many) and more samples, i.e. a GPU or a cluster: the command is in the notebook. TDVP with one RBM is the more accurate of the two here.
+
 ## Tests
 
 `tests/QELM/NQS/dynamics/test_neural_galerkin.py`: Hamiltonian against Kronecker products, symmetric spectrum, `Ψ(0) = |+>^N` for any parameters, `ċ` against finite differences, Simpson's rule exact on cubics, the matrix loss against `||P_⊥(∂_tΨ + iHΨ)||²` on vectors, gauge invariance under `H -> H + E_0`, `L = 0` on the exact solution and `L > 0` on a wrong one, Eq. 9 against `expm`, Monte Carlo against exact sums (including a peaked window), `L ≥ 0` for 5 samples, and a 3x3 quench against ED (error on `<σ^x>` below 6e-3 for a drop of 0.3, energy within 1 %). `test_galerkin_benchmark.py`: the TDVP loss on vectors and its minimality, the `|+>^N` MCState, a 3x3 TDVP quench against ED, and the figure helpers.

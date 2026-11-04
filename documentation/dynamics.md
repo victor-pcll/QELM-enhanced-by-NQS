@@ -16,7 +16,7 @@ with Pauli matrices. `J` is a scalar (uniform couplings) or a real symmetric `(N
 
 ## TDVP
 
-`run_tdvp(H, state, T=..., observables=..., settings=TDVPSettings(...))` runs `nk.experimental.TDVP` with `QGTJacobianDense` and updates `state` in place (after the call it holds `ψ(T)`). The observables are recorded on `time_grid(T, dt)`: the grid is passed as `tstops`, so adaptive integrators (`RK45`, `RK23`) land on exactly those times. NetKet's log stores the physical time `t` in `iters`, not a step index, so no `iters * dt` conversion is needed. Pass `log_path` to also write NetKet's JSON log, for instance `paths.exp / "tdvp"`.
+`run_tdvp(H, state, T=..., observables=..., settings=TDVPSettings(...), callback=None)` runs `nk.experimental.TDVP` with `QGTJacobianDense` and updates `state` in place (after the call it holds `ψ(T)`). The observables are recorded on `time_grid(T, dt)`: the grid is passed as `tstops`, so adaptive integrators (`RK45`, `RK23`) land on exactly those times. NetKet's log stores the physical time `t` in `iters`, not a step index, so no `iters * dt` conversion is needed. Pass `log_path` to also write NetKet's JSON log, for instance `paths.exp / "tdvp"`, and `callback` to run code at every grid time (the t-NQG benchmark records the TDVP loss this way, see [neural_galerkin.md](neural_galerkin.md)).
 
 | `TDVPSettings` field | Default | Note |
 | --- | --- | --- |

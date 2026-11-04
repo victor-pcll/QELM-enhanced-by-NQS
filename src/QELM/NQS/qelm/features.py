@@ -75,8 +75,8 @@ class QELMReservoir:
 
     Attributes:
         couplings: Symmetric ``(N, N)`` XX couplings.
-        h0: Field at ``x = 0``.
-        kappa: Input scale: ``h(x) = h0 + kappa * x``.
+        h0: Field at ``x = 0`` (default ``0``, so that ``h(x) = x``).
+        kappa: Input scale: ``h(x) = h0 + kappa * x`` (default ``1``).
         T: Last readout time. Keep it short: the TDVP error grows with T.
         n_readouts: Number of readout times ``t_k = k T / n_readouts``,
             ``k = 1..n_readouts`` (``t = 0`` carries no information on x).
@@ -96,7 +96,7 @@ class QELMReservoir:
     """
 
     couplings: np.ndarray
-    h0: float = 1.0
+    h0: float = 0.0
     kappa: float = 1.0
     T: float = 1.0
     n_readouts: int = 10

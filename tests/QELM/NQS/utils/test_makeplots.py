@@ -139,3 +139,53 @@ def test_plot_exact_vs_tdvp(tmp_path: Path) -> None:
         makeplots.plot_exact_vs_tdvp(
             t, np.cos(t[:-1]), t, np.cos(t), filename="s.png", directory=tmp_path
         )
+
+
+def test_figures_share_the_style_and_have_no_grid(tmp_path, monkeypatch) -> None:
+    """Issue #34: larger titles and labels, no grid, caller's rcParams untouched."""
+    import matplotlib as mpl
+
+    captured = []
+    original = makeplots.save_figure
+
+    def capture(fig, filename, directory=None, **kw):
+        captured.append(fig)
+        return original(fig, filename, directory, **kw)
+
+    monkeypatch.setattr(makeplots, "save_figure", capture)
+    before = dict(mpl.rcParams)
+    t = np.linspace(0.0, 1.0, 11)
+    makeplots.plot_time_series(
+        t, {"a": t}, filename="a.png", directory=tmp_path, title="title"
+    )
+    makeplots.plot_exact_vs_tdvp(
+        t, t, t, t + 1e-3, filename="b.png", directory=tmp_path, title="title"
+    )
+    makeplots.plot_singular_values(
+        np.array([3.0, 2.0, 1.0]), filename="c.png", directory=tmp_path, title="t"
+    )
+    assert len(captured) == 3
+    for fig in captured:
+        for ax in fig.axes:
+            lines = ax.get_xgridlines() + ax.get_ygridlines()
+            assert not any(line.get_visible() for line in lines)
+            assert ax.xaxis.label.get_fontsize() == makeplots.STYLE["axes.labelsize"]
+            ticks = ax.get_xticklabels()
+            assert all(
+                tick.get_fontsize() == makeplots.STYLE["xtick.labelsize"]
+                for tick in ticks
+            )
+    title = captured[0].axes[0].title
+    assert title.get_fontsize() == makeplots.STYLE["axes.titlesize"]
+    assert title.get_fontsize() > 12
+    # The style is local: the global Matplotlib state is unchanged.
+    assert dict(mpl.rcParams) == before
+
+
+def test_apply_style_sets_the_shared_rcparams() -> None:
+    import matplotlib as mpl
+
+    with mpl.rc_context():
+        makeplots.apply_style()
+        assert mpl.rcParams["axes.grid"] is False
+        assert mpl.rcParams["axes.titlesize"] == makeplots.STYLE["axes.titlesize"]

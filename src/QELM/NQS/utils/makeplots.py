@@ -4,18 +4,85 @@ Each function builds a Matplotlib figure with the object-oriented API (no
 global ``pyplot`` state, no display needed), writes it to the ``plots/``
 folder of the current run (next to ``logs/``, see :mod:`QELM.NQS.paths`)
 and returns the written path.
+
+Every figure uses the shared :data:`STYLE` (issue #34): larger titles,
+labels and ticks, the same line widths and colour cycle, and no grid. The
+plot functions apply it locally with :func:`plot_style`, so the global
+Matplotlib state of the caller is left untouched; notebooks call
+:func:`apply_style` once to get the same look.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import functools
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any, cast
 
+import matplotlib as mpl
 import numpy as np
+from cycler import cycler
 from matplotlib.figure import Figure
 from numpy.typing import ArrayLike
 
 from QELM.NQS.paths import experiment_paths
+
+#: Colour-blind-safe categorical cycle (Okabe-Ito), shared by every figure.
+PALETTE: tuple[str, ...] = (
+    "#0072B2",
+    "#D55E00",
+    "#009E73",
+    "#CC79A7",
+    "#E69F00",
+    "#56B4E9",
+    "#000000",
+)
+
+#: Matplotlib rc parameters of every project figure (issue #34).
+STYLE: dict[str, Any] = {
+    "axes.grid": False,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.linewidth": 1.0,
+    "axes.prop_cycle": cycler(color=list(PALETTE)),
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "figure.titlesize": 18,
+    "figure.titleweight": "bold",
+    "font.size": 12,
+    "legend.fontsize": 11,
+    "legend.frameon": False,
+    "lines.linewidth": 1.8,
+    "lines.markersize": 5,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "savefig.dpi": 150,
+}
+
+
+def apply_style() -> None:
+    """Set :data:`STYLE` globally (for notebooks that draw with ``pyplot``)."""
+    mpl.rcParams.update(cast(Any, STYLE))
+
+
+@contextmanager
+def plot_style() -> Iterator[None]:
+    """Apply :data:`STYLE` inside a ``with`` block, then restore the caller's."""
+    with mpl.rc_context(cast(Any, STYLE)):
+        yield
+
+
+def styled[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """Decorate a plot function so that it draws with :data:`STYLE`."""
+
+    @functools.wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        with plot_style():
+            return func(*args, **kwargs)
+
+    return wrapper
 
 
 def plots_dir(directory: Path | str | None = None) -> Path:
@@ -64,6 +131,7 @@ def save_figure(
     return path
 
 
+@styled
 def plot_time_series(
     times: ArrayLike,
     series: Mapping[str, ArrayLike],
@@ -110,11 +178,11 @@ def plot_time_series(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_convergence(
     iterations: ArrayLike,
     values: ArrayLike,
@@ -162,11 +230,11 @@ def plot_convergence(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_exact_vs_tdvp(
     times_exact: ArrayLike,
     exact: ArrayLike,
@@ -222,19 +290,18 @@ def plot_exact_vs_tdvp(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     if same_grid:
         error = np.abs(y_nqs - y_ex)
         ax_err.semilogy(t_ex, np.maximum(error, 1e-16), "b-")
         ax_err.set_ylabel("|TDVP - ED|")
         ax_err.set_xlabel("t")
-        ax_err.grid(True, linestyle="--", alpha=0.6)
     else:
         ax.set_xlabel("t")
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_energy_variance(
     iterations: ArrayLike,
     variance: ArrayLike,
@@ -277,6 +344,7 @@ def plot_energy_variance(
     )
 
 
+@styled
 def plot_vmc_diagnostics(
     iterations: ArrayLike,
     energy_per_spin: ArrayLike,
@@ -395,13 +463,13 @@ def plot_vmc_diagnostics(
     ):
         ax.set_xlabel("iteration")
         ax.set_title(name)
-        ax.grid(True, linestyle="--", alpha=0.6)
     if title:
         fig.suptitle(title)
     fig.tight_layout()
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_singular_values(
     singular_values: ArrayLike,
     *,
@@ -446,13 +514,11 @@ def plot_singular_values(
     ax_s.semilogy(modes, np.maximum(sigma, 1e-16), "o-")
     ax_s.set_xlabel("mode k")
     ax_s.set_ylabel(r"$\sigma_k$")
-    ax_s.grid(True, linestyle="--", alpha=0.6)
     ax_c.plot(modes, cumulative, "o-")
     ax_c.axhline(0.9, color="k", linestyle="--", linewidth=1, label="90 %")
     ax_c.set_ylim(0, 1.05)
     ax_c.set_xlabel("mode k")
     ax_c.set_ylabel(r"$\sum_{l \leq k} \sigma_l^2 / \sum \sigma^2$")
-    ax_c.grid(True, linestyle="--", alpha=0.6)
     ax_c.legend()
     if title:
         fig.suptitle(title)
@@ -460,12 +526,17 @@ def plot_singular_values(
 
 
 __all__ = [
+    "PALETTE",
+    "STYLE",
+    "apply_style",
     "plot_convergence",
     "plot_energy_variance",
     "plot_exact_vs_tdvp",
     "plot_singular_values",
+    "plot_style",
     "plot_time_series",
     "plot_vmc_diagnostics",
     "plots_dir",
     "save_figure",
+    "styled",
 ]

@@ -68,7 +68,9 @@ def couplings() -> np.ndarray:
 
 @pytest.fixture(scope="module", params=AXES)
 def quench(request, couplings: np.ndarray) -> QELMReservoir:
-    return QELMReservoir(couplings, T=1.0, initial="quench", quench_axis=request.param)
+    return QELMReservoir(
+        couplings, h0=1.0, T=1.0, initial="quench", quench_axis=request.param
+    )
 
 
 @pytest.fixture(scope="module")
@@ -182,7 +184,7 @@ def test_hadamard_frame_is_an_exact_change_of_basis(hilbert, couplings) -> None:
 
 def test_z_quench_features_agree_between_frames(couplings) -> None:
     """<Z_i>(t) from |0>^N under H equals <X_i>(t) from |+>^N under U H U."""
-    r = QELMReservoir(couplings, T=1.0, initial="quench", quench_axis="z")
+    r = QELMReservoir(couplings, h0=1.0, T=1.0, initial="quench", quench_axis="z")
     hilbert = spin_half_hilbert(N)
     grid = time_grid(r.T, r.tdvp.dt)
     for x in (-0.5, 0.3):
@@ -200,9 +202,9 @@ def test_z_quench_features_agree_between_frames(couplings) -> None:
 
 
 def test_frames_and_vectors_per_initial_state(couplings) -> None:
-    rbm_r = QELMReservoir(couplings)
-    x_r = QELMReservoir(couplings, initial="quench", quench_axis="x")
-    z_r = QELMReservoir(couplings, initial="quench")
+    rbm_r = QELMReservoir(couplings, h0=1.0)
+    x_r = QELMReservoir(couplings, h0=1.0, initial="quench", quench_axis="x")
+    z_r = QELMReservoir(couplings, h0=1.0, initial="quench")
     assert z_r.quench_axis == "z"  # the default quench
     assert z_r.hadamard_frame and not x_r.hadamard_frame and not rbm_r.hadamard_frame
     hilbert = spin_half_hilbert(N)
@@ -266,6 +268,7 @@ def test_quench_without_couplings(quench: QELMReservoir) -> None:
     """J = 0: H commutes with Z, so <Z_i>(t) = <Z_i>(0) (1 for |0>, 0 for |+>)."""
     r = QELMReservoir(
         np.zeros((3, 3)),
+        h0=1.0,
         T=0.5,
         n_readouts=5,
         initial="quench",
@@ -297,7 +300,7 @@ def test_tdvp_follows_ed_from_the_quench_state(quench_features) -> None:
 
 def test_singular_rbm_point_freezes_the_z_quench(couplings) -> None:
     """Negative control: at W = 0 the tangent space has no pair directions."""
-    r = QELMReservoir(couplings, T=1.0, initial="quench", quench_axis="z")
+    r = QELMReservoir(couplings, h0=1.0, T=1.0, initial="quench", quench_axis="z")
     obs = r.observables(frame="tdvp")
     errors = {}
     for w in (0.0, 1.0):

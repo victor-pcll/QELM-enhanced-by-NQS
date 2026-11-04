@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -92,6 +92,7 @@ def run_tdvp(
     settings: TDVPSettings | None = None,
     log_path: Path | str | None = None,
     record_states: bool = False,
+    callback: Callable[[Any, Any, Any], bool] | None = None,
 ) -> TDVPResult:
     """Evolve ``state`` in real time under ``hamiltonian`` from ``t0 = 0`` to ``T``.
 
@@ -117,6 +118,10 @@ def run_tdvp(
             every grid time (``2**N`` amplitudes per time, so small ``N``
             only). It gives the quantities that are not operators, such as
             the entanglement entropy or the fidelity with ED along the way.
+        callback: Passed to NetKet's ``driver.run``; called at every
+            stopping time (the grid) as ``callback(step, log_data, driver)``
+            and must return ``True`` to continue (``driver.t`` is the
+            current time).
 
     Returns:
         The recorded times and observables.
@@ -150,13 +155,17 @@ def run_tdvp(
             recorded.append(np.asarray(drv.state.to_array()))
         return True
 
+    def on_stop(step: Any, log_data: Any, drv: Any) -> bool:
+        record(step, log_data, drv)  # always: it also keeps psi(T), see above
+        return True if callback is None else bool(callback(step, log_data, drv))
+
     driver.run(
         T=float(grid[-1]),
         out=tuple(loggers),
         obs=dict(observables),
         tstops=grid,
         show_progress=False,
-        callback=record,
+        callback=on_stop,
     )
     if not np.isclose(last_stop.get("t", np.nan), grid[-1], rtol=0, atol=1e-9):
         raise RuntimeError(

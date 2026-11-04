@@ -82,7 +82,7 @@ def test_inputs_change_the_features(features) -> None:
 
 def test_without_couplings_magnetizations_are_conserved() -> None:
     """J = 0: H is diagonal in Z, so every <Z_i>(t) = <Z_i>(0), for any x."""
-    reservoir = QELMReservoir(np.zeros((3, 3)), T=0.5, n_readouts=5)
+    reservoir = QELMReservoir(np.zeros((3, 3)), h0=1.0, T=0.5, n_readouts=5)
     state = reservoir.initial_state()
     z0 = np.array(
         [float(state.expect(op).mean.real) for op in reservoir.observables().values()]
@@ -114,7 +114,9 @@ def test_tdvp_error_grows_with_evolution_time(reservoir: QELMReservoir) -> None:
     single time oscillates, so running maxima are compared).
     """
     T = 2.0
-    r = QELMReservoir(reservoir.couplings, T=T, n_readouts=round(T / reservoir.tdvp.dt))
+    r = QELMReservoir(
+        reservoir.couplings, h0=1.0, T=T, n_readouts=round(T / reservoir.tdvp.dt)
+    )
     error = np.abs(
         feature_matrix(r, [0.3], method="tdvp")
         - feature_matrix(r, [0.3], method="exact")
@@ -140,8 +142,42 @@ def test_readout_trained_on_ed_transfers_to_tdvp(features) -> None:
 
 def test_custom_tdvp_settings_are_used() -> None:
     settings = TDVPSettings(dt=0.05, integrator="RK4", diag_shift=1e-6)
-    r = QELMReservoir(random_couplings(3, seed=1), T=0.2, n_readouts=2, tdvp=settings)
+    r = QELMReservoir(
+        random_couplings(3, seed=1), h0=1.0, T=0.2, n_readouts=2, tdvp=settings
+    )
     exact = feature_matrix(r, [0.1], method="exact")
     tdvp = feature_matrix(r, [0.1], method="tdvp")
     assert exact.shape == (1, 6)
     np.testing.assert_allclose(tdvp, exact, atol=1e-3)
+
+
+def test_field_defaults_to_the_identity_map() -> None:
+    """Issue #33: by default h(x) = h0 + kappa x with h0 = 0, kappa = 1."""
+    r = QELMReservoir(random_couplings(3, seed=1))
+    assert (r.h0, r.kappa) == (0.0, 1.0)
+    for x in (-0.7, 0.0, 0.4):
+        assert r.field(x) == pytest.approx(x)
+
+
+@pytest.mark.parametrize(("h0", "kappa", "x"), [(0.5, 2.0, 0.3), (-1.0, 0.5, -0.8)])
+def test_hamiltonian_field_is_shifted_and_scaled(h0: float, kappa: float, x: float):
+    """Issue #33: the Z_i coefficient of H(x) is exactly h0 + kappa * x.
+
+    The Z part of H is diagonal and the XX part is off-diagonal in the
+    computational basis, so diag(H) = h(x) sum_i s_i with s_i = +-1.
+    Comparing with the default reservoir isolates the affine map.
+    """
+    couplings = random_couplings(3, seed=1)
+    r = QELMReservoir(couplings, h0=h0, kappa=kappa)
+    H = r.hamiltonian(x).to_dense()
+    states = r.hamiltonian(x).hilbert.all_states()
+    magnetization = np.asarray(states).sum(axis=1)
+    np.testing.assert_allclose(np.diag(H), (h0 + kappa * x) * magnetization)
+    # Off-diagonal (XX) part does not depend on the field.
+    H_ref = QELMReservoir(couplings).hamiltonian(0.0).to_dense()
+    off = ~np.eye(H.shape[0], dtype=bool)
+    np.testing.assert_allclose(H[off], H_ref[off])
+    # Same operator as the default reservoir at the input that gives h(x).
+    np.testing.assert_allclose(
+        H, QELMReservoir(couplings).hamiltonian(h0 + kappa * x).to_dense()
+    )

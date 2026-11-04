@@ -4,18 +4,85 @@ Each function builds a Matplotlib figure with the object-oriented API (no
 global ``pyplot`` state, no display needed), writes it to the ``plots/``
 folder of the current run (next to ``logs/``, see :mod:`QELM.NQS.paths`)
 and returns the written path.
+
+Every figure uses the shared :data:`STYLE` (issue #34): larger titles,
+labels and ticks, the same line widths and colour cycle, and no grid. The
+plot functions apply it locally with :func:`plot_style`, so the global
+Matplotlib state of the caller is left untouched; notebooks call
+:func:`apply_style` once to get the same look.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import functools
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Any, cast
 
+import matplotlib as mpl
 import numpy as np
+from cycler import cycler
 from matplotlib.figure import Figure
 from numpy.typing import ArrayLike
 
 from QELM.NQS.paths import experiment_paths
+
+#: Colour-blind-safe categorical cycle (Okabe-Ito), shared by every figure.
+PALETTE: tuple[str, ...] = (
+    "#0072B2",
+    "#D55E00",
+    "#009E73",
+    "#CC79A7",
+    "#E69F00",
+    "#56B4E9",
+    "#000000",
+)
+
+#: Matplotlib rc parameters of every project figure (issue #34).
+STYLE: dict[str, Any] = {
+    "axes.grid": False,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.linewidth": 1.0,
+    "axes.prop_cycle": cycler(color=list(PALETTE)),
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "figure.titlesize": 18,
+    "figure.titleweight": "bold",
+    "font.size": 12,
+    "legend.fontsize": 11,
+    "legend.frameon": False,
+    "lines.linewidth": 1.8,
+    "lines.markersize": 5,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "savefig.dpi": 150,
+}
+
+
+def apply_style() -> None:
+    """Set :data:`STYLE` globally (for notebooks that draw with ``pyplot``)."""
+    mpl.rcParams.update(cast(Any, STYLE))
+
+
+@contextmanager
+def plot_style() -> Iterator[None]:
+    """Apply :data:`STYLE` inside a ``with`` block, then restore the caller's."""
+    with mpl.rc_context(cast(Any, STYLE)):
+        yield
+
+
+def styled[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """Decorate a plot function so that it draws with :data:`STYLE`."""
+
+    @functools.wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        with plot_style():
+            return func(*args, **kwargs)
+
+    return wrapper
 
 
 def plots_dir(directory: Path | str | None = None) -> Path:
@@ -64,6 +131,7 @@ def save_figure(
     return path
 
 
+@styled
 def plot_time_series(
     times: ArrayLike,
     series: Mapping[str, ArrayLike],
@@ -110,11 +178,11 @@ def plot_time_series(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_convergence(
     iterations: ArrayLike,
     values: ArrayLike,
@@ -162,11 +230,11 @@ def plot_convergence(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_exact_vs_tdvp(
     times_exact: ArrayLike,
     exact: ArrayLike,
@@ -222,19 +290,18 @@ def plot_exact_vs_tdvp(
     ax.set_ylabel(ylabel)
     if title:
         ax.set_title(title)
-    ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend()
     if same_grid:
         error = np.abs(y_nqs - y_ex)
         ax_err.semilogy(t_ex, np.maximum(error, 1e-16), "b-")
         ax_err.set_ylabel("|TDVP - ED|")
         ax_err.set_xlabel("t")
-        ax_err.grid(True, linestyle="--", alpha=0.6)
     else:
         ax.set_xlabel("t")
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_field_scan(
     fields: Mapping[str, ArrayLike],
     values: Mapping[str, Mapping[str, ArrayLike]],
@@ -284,7 +351,6 @@ def plot_field_scan(
             ax.loglog(x, np.maximum(y, 1e-16), "o-", label=label)
         ax.set_xlabel("h")
         ax.set_ylabel(ylabel)
-        ax.grid(True, which="both", linestyle="--", alpha=0.5)
     for ax in axes[len(panels) :]:
         ax.set_visible(False)
     axes[0].legend()
@@ -294,6 +360,7 @@ def plot_field_scan(
     return save_figure(fig, filename, directory)
 
 
+@styled
 def plot_energy_variance(
     iterations: ArrayLike,
     variance: ArrayLike,
@@ -336,6 +403,132 @@ def plot_energy_variance(
     )
 
 
+@styled
+def plot_vmc_diagnostics(
+    iterations: ArrayLike,
+    energy_per_spin: ArrayLike,
+    *,
+    target: float,
+    variance: ArrayLike,
+    acceptance: ArrayLike,
+    energy_error: ArrayLike | None = None,
+    exact_energy_per_spin: ArrayLike | None = None,
+    exact_variance: ArrayLike | None = None,
+    filename: str = "vmc_diagnostics.png",
+    directory: Path | str | None = None,
+    floor: float = 1e-16,
+    title: str = "",
+) -> Path:
+    """Plot four VMC diagnostics side by side against the iterations.
+
+    1. ``E / N`` with its error bars and the exact ``E_0 / N`` dashed;
+    2. the relative error ``|E/N - E_0/N| / |E_0/N|``, log scale;
+    3. the energy variance ``sigma_E^2``, log scale (``0`` for an exact
+       eigenstate);
+    4. the Metropolis acceptance rate, in ``[0, 1]``.
+
+    Values below ``floor`` are drawn at ``floor`` on the log panels. The
+    exact (full-sum) curves, if given, are drawn next to the Monte Carlo
+    ones on the first three panels.
+
+    Args:
+        iterations: Iteration indices, shape ``(n_iter,)``.
+        energy_per_spin: ``<H> / N`` per iteration.
+        target: Exact ground-state energy per spin ``E_0 / N``, non-zero.
+        variance: Energy variance per iteration (of ``H``, not ``H / N``).
+        acceptance: Acceptance rate per iteration.
+        energy_error: Statistical error of ``E / N``, if given.
+        exact_energy_per_spin: Exact ``<H> / N`` per iteration, if given.
+        exact_variance: Exact ``<H^2> - <H>^2`` per iteration, if given.
+        filename: Output file name.
+        directory: Target folder, see :func:`plots_dir`.
+        floor: Smallest value drawn on the log panels.
+        title: Figure title.
+
+    Returns:
+        Path of the written figure.
+
+    Raises:
+        ValueError: If shapes differ, ``target`` is zero, a variance is
+            negative or an acceptance is outside ``[0, 1]``.
+    """
+    x = np.asarray(iterations, dtype=float)
+    e = np.asarray(energy_per_spin, dtype=float)
+    v = np.asarray(variance, dtype=float)
+    acc = np.asarray(acceptance, dtype=float)
+    if not (x.shape == e.shape == v.shape == acc.shape):
+        raise ValueError(
+            f"Shapes differ: {x.shape}, {e.shape}, {v.shape}, {acc.shape}."
+        )
+    if target == 0:
+        raise ValueError("The relative error needs a non-zero target.")
+    if np.any(v < 0):
+        raise ValueError("An energy variance cannot be negative.")
+    if np.any((acc < 0) | (acc > 1)):
+        raise ValueError("An acceptance rate is in [0, 1].")
+    exact_e = None
+    if exact_energy_per_spin is not None:
+        exact_e = np.asarray(exact_energy_per_spin, dtype=float)
+    exact_v = None if exact_variance is None else np.asarray(exact_variance, float)
+    for extra in (exact_e, exact_v):
+        if extra is not None and extra.shape != x.shape:
+            raise ValueError(f"Shapes differ: {x.shape}, {extra.shape}.")
+    if exact_v is not None and np.any(exact_v < -1e-12):
+        raise ValueError("An energy variance cannot be negative.")
+
+    def relative(values: np.ndarray) -> np.ndarray:
+        return np.abs(values - target) / abs(target)
+
+    fig = Figure(figsize=(20, 4.5))
+    axes = fig.subplots(1, 4)
+    if energy_error is None:
+        axes[0].plot(x, e, marker=".", ms=3, lw=1, label=r"VMC $E/N$")
+    else:
+        axes[0].errorbar(
+            x,
+            e,
+            yerr=np.asarray(energy_error, dtype=float),
+            marker=".",
+            ms=3,
+            lw=1,
+            label=r"VMC $E/N$",
+        )
+    if exact_e is not None:
+        axes[0].plot(x, exact_e, lw=1.5, label=r"exact $E/N$ (full sum)")
+    axes[0].axhline(
+        target, color="k", linestyle="--", label=rf"exact $E_0/N = {target:g}$"
+    )
+    axes[0].set_ylabel(r"$E / N$")
+    axes[0].legend()
+    axes[1].plot(x, np.maximum(relative(e), floor), marker=".", ms=3, lw=1, label="MC")
+    if exact_e is not None:
+        axes[1].plot(x, np.maximum(relative(exact_e), floor), lw=1.5, label="exact")
+        axes[1].legend()
+    axes[1].set_yscale("log")
+    axes[1].set_ylabel(r"$|E/N - E_0/N| \,/\, |E_0/N|$")
+    axes[2].plot(x, np.maximum(v, floor), marker=".", ms=3, lw=1, label="MC")
+    if exact_v is not None:
+        axes[2].plot(x, np.maximum(exact_v, floor), lw=1.5, label="exact")
+        axes[2].legend()
+    axes[2].set_yscale("log")
+    axes[2].set_ylabel(r"$\sigma_E^2 = \langle H^2 \rangle - \langle H \rangle^2$")
+    axes[3].plot(x, acc, marker=".", ms=3, lw=1)
+    axes[3].set_ylim(0.0, 1.05)
+    axes[3].set_ylabel("acceptance rate")
+    for ax, name in zip(
+        axes,
+        ("energy per spin", "relative error", "energy variance", "acceptance"),
+        strict=True,
+    ):
+        ax.set_xlabel("iteration")
+        ax.set_title(name)
+    if title:
+        fig.suptitle(title)
+    fig.tight_layout()
+    return save_figure(fig, filename, directory)
+
+
+@styled
 def plot_singular_values(
     singular_values: ArrayLike,
     *,
@@ -380,13 +573,11 @@ def plot_singular_values(
     ax_s.semilogy(modes, np.maximum(sigma, 1e-16), "o-")
     ax_s.set_xlabel("mode k")
     ax_s.set_ylabel(r"$\sigma_k$")
-    ax_s.grid(True, linestyle="--", alpha=0.6)
     ax_c.plot(modes, cumulative, "o-")
     ax_c.axhline(0.9, color="k", linestyle="--", linewidth=1, label="90 %")
     ax_c.set_ylim(0, 1.05)
     ax_c.set_xlabel("mode k")
     ax_c.set_ylabel(r"$\sum_{l \leq k} \sigma_l^2 / \sum \sigma^2$")
-    ax_c.grid(True, linestyle="--", alpha=0.6)
     ax_c.legend()
     if title:
         fig.suptitle(title)
@@ -394,12 +585,18 @@ def plot_singular_values(
 
 
 __all__ = [
+    "PALETTE",
+    "STYLE",
+    "apply_style",
     "plot_field_scan",
     "plot_convergence",
     "plot_energy_variance",
     "plot_exact_vs_tdvp",
     "plot_singular_values",
+    "plot_style",
     "plot_time_series",
+    "plot_vmc_diagnostics",
     "plots_dir",
     "save_figure",
+    "styled",
 ]

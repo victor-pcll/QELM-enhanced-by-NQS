@@ -11,6 +11,7 @@ from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 
 from QELM.NQS.embedding import (
+    ENERGY_FILENAME,
     HYPERPARAMETERS_FILENAME,
     VMCGroundStatePreparation,
     VMCSettings,
@@ -101,6 +102,10 @@ def test_outputs_are_routed_to_the_run_folder(prepared) -> None:
     log = json.loads(prep.log_path.read_text())
     assert len(log["Energy"]["iters"]) == prep.settings.n_iter
     assert (exp / "vmc.mpack").is_file()
+    saved = np.load(exp / ENERGY_FILENAME)
+    np.testing.assert_array_equal(saved["acceptance"], prep.acceptance)
+    assert prep.acceptance.shape == prep.iterations.shape
+    assert np.all((prep.acceptance > 0) & (prep.acceptance <= 1))
 
 
 def test_default_outputs_go_to_a_run_under_outputs(

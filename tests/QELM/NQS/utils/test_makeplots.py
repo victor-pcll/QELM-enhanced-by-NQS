@@ -65,6 +65,48 @@ def test_plot_inputs_are_validated(tmp_path: Path) -> None:
     assert not any(tmp_path.iterdir())
 
 
+def test_plot_vmc_diagnostics(tmp_path: Path) -> None:
+    iters = np.arange(6)
+    energy = -1.0 + 10.0 ** (-iters.astype(float))
+    kwargs = dict(
+        target=-1.0,
+        variance=10.0 ** (-2 * iters.astype(float)),
+        acceptance=np.linspace(0.9, 0.1, 6),
+        directory=tmp_path,
+    )
+    path = makeplots.plot_vmc_diagnostics(
+        iters, energy, energy_error=np.full(6, 1e-3), **kwargs
+    )
+    assert path == tmp_path / "vmc_diagnostics.png"
+    assert _is_png(path)
+    path = makeplots.plot_vmc_diagnostics(
+        iters,
+        energy,
+        exact_energy_per_spin=energy + 1e-4,
+        exact_variance=np.full(6, 1e-5),
+        filename="with_exact.png",
+        **kwargs,
+    )
+    assert _is_png(path)
+    # An exact final energy (relative error 0) is drawn at the floor.
+    energy[-1] = -1.0
+    assert _is_png(makeplots.plot_vmc_diagnostics(iters, energy, **kwargs))
+    bad = [
+        {"target": 0.0},
+        {"variance": -np.ones(6)},
+        {"acceptance": np.full(6, 1.5)},
+        {"acceptance": np.ones(5)},
+        {"exact_energy_per_spin": np.ones(5)},
+        {"exact_variance": -np.ones(6)},
+    ]
+    for override in bad:
+        with pytest.raises(ValueError):
+            makeplots.plot_vmc_diagnostics(
+                iters, energy, filename="bad.png", **{**kwargs, **override}
+            )
+    assert not (tmp_path / "bad.png").exists()
+
+
 def test_default_directory_is_a_fresh_run_outside_hydra(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

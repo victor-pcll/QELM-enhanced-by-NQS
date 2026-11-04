@@ -65,14 +65,18 @@ The 6x6 run is limited by the 4 CPU cores of the session: about 1.5 h per field.
 
 ## Results
 
-See the PR of issue #24 for the figures and numbers. On 4x4 at `h = 3.044` (ED reference):
+4x4, `T = 1`, ED reference (`figure2_4x4.png`, `errors_4x4.png` in the PR):
 
-| Method | max `|Δ<σ^x>|` | mean `|Δ<σ^x>|` | median `L/N` | max `|E(t) - E(0)|/N` | wall |
-| --- | --- | --- | --- | --- | --- |
-| t-NQG, M = 18 | 1.5e-2 | 5.4e-3 | 1.3e-2 | 3.9e-2 | 36 min |
-| TDVP, 1 RBM | 3.7e-2 | 1.1e-2 | 1.1e-1 | 3.1e-2 | 3.4 min |
+| h | Method | max `\|Δ<σ^x>\|` | mean `\|Δ<σ^x>\|` | median `L/N` | max `\|E(t) - E(0)\|/N` | wall |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 | t-NQG, M = 18 | 1.6e-2 | 8.8e-3 | 2.8e-3 | 4.3e-2 | 37 min |
+| 5 | TDVP, 1 RBM | 7.9e-3 | 1.9e-3 | 3.3e-3 | 2.6e-2 | 3 min |
+| 3.044 | t-NQG, M = 18 | 1.5e-2 | 5.4e-3 | 1.3e-2 | 3.9e-2 | 36 min |
+| 3.044 | TDVP, 1 RBM | 3.7e-2 | 1.1e-2 | 1.1e-1 | 3.1e-2 | 3 min |
+| 2 | t-NQG, M = 18 | 3.0e-2 | 1.5e-2 | 4.1e-2 | 7.7e-2 | 37 min |
+| 2 | TDVP, 1 RBM | 8.1e-2 | 2.3e-2 | 2.5e-1 | 5.9e-2 | 3 min |
 
-`L(t)` of t-NQG peaks at the start of each window, where `ċ(0)` alone must match `-iHA_w`.
+At the critical point and in the ferromagnetic phase, t-NQG beats one TDVP RBM by 2-3x on `<σ^x>` and by about 6x on the loss. At `h = 5` a single RBM is already accurate (its loss is as low as that of t-NQG), and t-NQG (300 Adam steps per window) is limited by its optimization: it keeps a small systematic offset. `L(t)` of t-NQG peaks at the start of each window, where `ċ(0)` alone must match `-iHA_w`.
 
 ## Tests
 

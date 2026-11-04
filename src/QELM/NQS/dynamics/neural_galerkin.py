@@ -589,7 +589,8 @@ def spectral_bounds(
     The bounds only set the initial frequencies, which are variational.
     """
     hilbert = hamiltonian.hilbert
-    if hilbert.n_states <= max_exact:
+    # n_states raises for huge spaces: compare log2 sizes (spin-1/2 only).
+    if hilbert.size <= np.log2(max_exact):
         import scipy.sparse.linalg as spla
 
         Hs = hamiltonian.to_sparse()

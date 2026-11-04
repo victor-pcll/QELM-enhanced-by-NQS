@@ -332,32 +332,38 @@ def plot_figure2(
     title: str = "",
     train_until: float | None = None,
 ) -> Path:
-    """Draw Fig. 2 (one lattice): ``<sigma^x>(t)`` per field, ``L(t)/N`` inset.
+    """Draw Fig. 2 (one lattice): ``<sigma^x>(t)`` per field, ``L(t)/N`` below.
 
+    The paper draws the loss as an inset; here it is a short panel under
+    each field so that it never hides the magnetization curves.
     ``train_until`` shades the training interval ``[0, T]`` in light green
     (Fig. 4, extrapolation beyond ``T``).
     """
     fields = [h for h in FIELDS if h in results]
-    fig = Figure(figsize=(4.6 * len(fields), 4.2))
-    axes = np.atleast_1d(fig.subplots(1, len(fields)))
-    for k, (ax, h) in enumerate(zip(axes, fields, strict=True)):
+    fig = Figure(figsize=(4.6 * len(fields), 5.4))
+    axes = fig.subplots(
+        2, len(fields), squeeze=False, sharex="col", height_ratios=[2.6, 1]
+    )
+    for k, h in enumerate(fields):
+        ax, ax_loss = axes[0, k], axes[1, k]
         if train_until is not None:
-            ax.axvspan(0.0, train_until, color="#c8eac8", alpha=0.6, lw=0)
-        inset = ax.inset_axes((0.5, 0.52, 0.46, 0.42))
+            for a in (ax, ax_loss):
+                a.axvspan(0.0, train_until, color="#c8eac8", alpha=0.6, lw=0)
         for key, tr in results[h].items():
             style = STYLES.get(key, {})
             ax.plot(tr.times, tr.x, label=tr.method, **style)
             if tr.loss is not None and key != "ED":
-                inset.semilogy(tr.times, np.maximum(tr.loss / n_spins, 1e-12), **style)
-        ax.set_xlabel("t")
-        if k == 0:
-            ax.set_ylabel(r"$\langle \sigma^x \rangle$")
+                ax_loss.semilogy(
+                    tr.times, np.maximum(tr.loss / n_spins, 1e-12), **style
+                )
         ax.set_title(f"(a{k + 1}) h = {h:g} ({PHASES.get(h, '')})", fontsize=11)
-        inset.set_title(r"$\mathcal{L}(t)/N$", fontsize=9)
-        inset.tick_params(labelsize=8)
-        for spine in ("top", "right"):
-            ax.spines[spine].set_visible(False)
-    axes[0].legend(loc="lower left", frameon=False, fontsize=9)
+        ax_loss.set_xlabel("t")
+        for a in (ax, ax_loss):
+            for spine in ("top", "right"):
+                a.spines[spine].set_visible(False)
+    axes[0, 0].set_ylabel(r"$\langle \sigma^x \rangle$")
+    axes[1, 0].set_ylabel(r"$\mathcal{L}(t)/N$")
+    axes[0, 0].legend(loc="best", frameon=False, fontsize=9)
     if title:
         fig.suptitle(title)
     fig.tight_layout()

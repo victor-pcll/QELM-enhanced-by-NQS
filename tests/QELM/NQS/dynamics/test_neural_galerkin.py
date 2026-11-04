@@ -352,6 +352,32 @@ def test_training_reduces_the_loss(quench3) -> None:
         assert h[-1] < 0.1 * h[0]
 
 
+def test_sampled_run_matches_ed_at_short_times() -> None:
+    """The Monte Carlo path end to end (sampling, balanced mixture, chunked
+    measurement over two windows) on 3x3 at h = 5, against ED."""
+    hilbert, _, H = tfi_square_lattice(3, h=5.0)
+    settings = NeuralGalerkinSettings(
+        n_basis=4,
+        n_frequencies=16,
+        n_quadrature=33,
+        n_iter=150,
+        learning_rate=1e-2,
+        n_samples=512,
+        n_chains=64,
+        n_eval_samples=2048,
+        eval_chunk=512,
+        n_eval_times=3,
+        window=0.1,
+    )
+    Xbar = mean_magnetization_x(hilbert)
+    result = run_neural_galerkin(H, T=0.2, observables={"X": Xbar}, settings=settings)
+    psi0 = np.full(hilbert.n_states, 2 ** (-hilbert.size / 2), dtype=complex)
+    x_exact = expectation_values(exact_time_evolution(H, psi0, result.times), Xbar)
+    assert result.observables["X"][0] == pytest.approx(1.0, abs=1e-12)
+    assert np.max(np.abs(result.observables["X"] - x_exact)) < 2e-2
+    assert np.all(result.loss >= 0)
+
+
 def test_settings_are_validated() -> None:
     with pytest.raises(ValueError):
         NeuralGalerkinSettings(n_quadrature=256)

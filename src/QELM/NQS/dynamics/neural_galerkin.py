@@ -159,6 +159,7 @@ class NeuralGalerkinSettings:
         n_eval_samples: Samples used to measure observables at the end of
             each window (``0``: exact sums, only for small systems).
         n_eval_times: Measurement times per window (both ends included).
+        eval_chunk: Samples per chunk when measuring (bounds the memory).
         exact: Sum exactly over the Hilbert space instead of sampling
             (small systems and tests only).
         seed: Seed of all random numbers.
@@ -181,6 +182,7 @@ class NeuralGalerkinSettings:
     symmetric_spectrum: bool = True
     n_eval_samples: int = 16384
     n_eval_times: int = 21
+    eval_chunk: int = 512
     exact: bool = False
     seed: int = 0
 
@@ -735,6 +737,36 @@ def run_neural_galerkin(
             frozen, rbm, x, weights, H, obs if with_obs else None, log_lam
         )
 
+    @jax.jit
+    def measure_chunk(
+        frozen: FrozenBasis,
+        rbm: Params,
+        x: Array,
+        w: Array,
+        log_lam: Array,
+        H: Any,
+        obs: Mapping[str, Any],
+    ) -> dict[str, Array]:
+        # The operators are arguments (JAX pytrees), not closure constants:
+        # NetKet packs their internals lazily and a closure would leak tracers.
+        return basis_matrices(frozen, rbm, x, w, H, obs, log_lam)
+
+    def measure(
+        frozen: FrozenBasis, rbm: Params, samples: Array | None, log_lam: Array
+    ) -> dict[str, Array]:
+        # Sums over chunks of samples: the connected configurations of all
+        # (frozen + current) basis states do not fit in memory at once.
+        if samples is None:
+            return matrices(frozen, rbm, None, log_lam, with_obs=True)
+        n = samples.shape[0]
+        total: dict[str, Array] = {}
+        for i in range(0, n, settings.eval_chunk):
+            x = samples[i : i + settings.eval_chunk]
+            w = jnp.full(x.shape[0], 1.0 / n)
+            m = measure_chunk(frozen, rbm, x, w, log_lam, H, obs)
+            total = m if not total else {k: total[k] + m[k] for k in m}
+        return total
+
     def window_loss(
         params: Params, frozen: FrozenBasis, samples: Array | None, log_lam: Array
     ) -> tuple[Array, Array]:
@@ -850,7 +882,7 @@ def run_neural_galerkin(
             eval_samples, chains, _ = draw(
                 frozen, params["rbm"], k_e, chains, log_lam, settings.n_eval_samples
             )
-        mats = matrices(frozen, params["rbm"], eval_samples, log_lam, with_obs=True)
+        mats = measure(frozen, params["rbm"], eval_samples, log_lam)
         gamma = _complex(params["gamma"])
         tau_w = tau_e
         if w == n_windows - 1 and extrapolate > 0:

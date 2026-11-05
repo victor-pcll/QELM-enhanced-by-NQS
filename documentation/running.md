@@ -29,6 +29,9 @@ uv run python main.py checkpoint.dir=/tmp/qelm-run checkpoint.use_uuid=true
 
 ## Notebooks
 
-From the repository root, run `uv sync`. `notebooks/00_outputs_starter.ipynb` finds the repository root by itself and loads the latest run of an experiment from `outputs/` (checkpoint metadata and the figures in `plots/`).
+From the repository root, run `uv sync`. Notebooks are split in two folders:
 
-`notebooks/series.ipynb` is the older example. When `data/series.npy` is a 1D or 2D numeric array, the notebook writes `outputs/series.png`. Both paths are gitignored. That figure is the local file. `evolve` stays a scaffold and is not a plot of the dynamics.
+- `notebooks/results/` holds physical results and experiments. `00_outputs_starter.ipynb` finds the repository root by itself and loads the latest run of an experiment from `outputs/` (checkpoint metadata and the figures in `plots/`). `01_tdvp_vs_ed_baseline.ipynb` compares TDVP with exact dynamics, see [dynamics.md](dynamics.md).
+- `notebooks/benchmarks/` holds performance benchmarks. `01_tdvp_wall_time.ipynb` reports the TDVP wall time against N and h.
+
+Run `notebooks/results/01_tdvp_vs_ed_baseline.ipynb` before the benchmark: both read the field scan cached in `outputs/tdvp_vs_ed_error_scan/`.

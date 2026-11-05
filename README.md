@@ -33,10 +33,13 @@ uv sync
 | `src/QELM/NQS/utils/makeplots.py` | All figures; written to the run's `plots/` folder |
 | `src/QELM/NQS/training/` | Training algorithms (Readout, Ridge scaffolds) |
 | `src/QELM/NQS/evaluation/` | Metrics and plot scaffolds |
-| `notebooks/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
-| `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics baseline |
+| `notebooks/results/` | Notebooks of physical results and experiments |
+| `notebooks/results/00_outputs_starter.ipynb` | Load the latest run of an experiment from `outputs/` |
+| `notebooks/results/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics: baseline, all observables, accumulated error vs h for N=4, 6, 8 |
+| `notebooks/benchmarks/` | Performance and computational benchmarks |
+| `notebooks/benchmarks/01_tdvp_wall_time.ipynb` | TDVP wall time against N and h |
+| `notebooks/02_quench_initialization.ipynb` | Quench initialization from the ground state of a pure field (issue #26) |
 | `notebooks/benchmarks/benchmark_neural_galerkin_2026.ipynb` | Fig. 2 of the time-dependent Neural Galerkin paper: t-NQG vs TDVP vs ED (issue #24) |
-| `notebooks/series.ipynb` | Plot a local series from `data/`; the library call stays a scaffold |
 | `notebooks/scratch/` | Local sandbox for throwaway notebooks and scripts (gitignored, only `.gitkeep` is tracked) |
 | `main.py` | Entrypoint. Routes sim type → model → training → evaluation → NetKet setup |
 | `outputs/` | Hydra runs, `outputs/<experiment_name>/<timestamp>/{exp,logs,plots}` (gitignored) |
@@ -60,9 +63,7 @@ From the repository root:
 uv sync
 ```
 
-Then open `notebooks/series.ipynb`. `uv sync` installs `ipykernel` and Matplotlib from the dev group, so the kernel can use `.venv`.
-
-The notebook reads `data/series.npy` (a 1D or 2D numeric array) and, when that file is present, writes `outputs/series.png`. Both directories are gitignored. The figure is the local file, not the Ising trajectory.
+Then open a notebook under `notebooks/results/` (physical results) or `notebooks/benchmarks/` (performance). `uv sync` installs `ipykernel` and Matplotlib from the dev group, so the kernel can use `.venv`. The notebooks find the repository root on their own and write to the root `outputs/` folder, which is gitignored.
 
 ## Data and checkpoints
 

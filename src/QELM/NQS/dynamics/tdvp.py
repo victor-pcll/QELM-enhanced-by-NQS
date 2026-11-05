@@ -56,11 +56,15 @@ class TDVPResult:
             shape ``(n_times,)``.
         imaginary_parts: Name mapped to the largest ``|Im <O>|`` (zero for
             a Hermitian operator up to round-off).
+        states: Normalized state vectors ``psi(t)`` on the same times,
+            shape ``(n_times, dim)``, when ``record_states=True``; else
+            ``None``. Only for states that can be written as a vector.
     """
 
     times: np.ndarray
     observables: dict[str, np.ndarray]
     imaginary_parts: dict[str, float] = field(default_factory=dict)
+    states: np.ndarray | None = None
 
 
 def _solver(settings: TDVPSettings) -> Any:
@@ -87,6 +91,7 @@ def run_tdvp(
     observables: Mapping[str, nk.operator.AbstractOperator],
     settings: TDVPSettings | None = None,
     log_path: Path | str | None = None,
+    record_states: bool = False,
     callback: Callable[[Any, Any, Any], bool] | None = None,
 ) -> TDVPResult:
     """Evolve ``state`` in real time under ``hamiltonian`` from ``t0 = 0`` to ``T``.
@@ -102,9 +107,14 @@ def run_tdvp(
         settings: Numerical settings; defaults to :class:`TDVPSettings`.
         log_path: When given, NetKet also writes its JSON log to
             ``<log_path>.log`` (for instance in the run's ``exp/``).
-        callback: Passed to NetKet's ``driver.run``; called after every
-            step as ``callback(step, log_data, driver)`` and must return
-            ``True`` to continue (``driver.t`` is the current time).
+        record_states: When ``True``, also store ``state.to_array()`` at
+            every grid time (``2**N`` amplitudes per time, so small ``N``
+            only). It gives the quantities that are not operators, such as
+            the entanglement entropy or the fidelity with ED along the way.
+        callback: Passed to NetKet's ``driver.run``; called at every
+            stopping time (the grid) as ``callback(step, log_data, driver)``
+            and must return ``True`` to continue (``driver.t`` is the
+            current time).
 
     Returns:
         The recorded times and observables.
@@ -126,13 +136,26 @@ def run_tdvp(
     if log_path is not None:
         Path(log_path).parent.mkdir(parents=True, exist_ok=True)
         loggers.append(nk.logging.JsonLog(str(log_path), save_params=False))
+    recorded: list[np.ndarray] = []
+
+    def record(step: Any, log_data: Any, drv: Any) -> bool:
+        # NetKet calls this only at the stopping times (the grid), before
+        # the step leaves them, so drv.state holds psi(t) at that time.
+        recorded.append(np.asarray(drv.state.to_array()))
+        return True
+
+    def on_stop(step: Any, log_data: Any, drv: Any) -> bool:
+        if record_states:
+            record(step, log_data, drv)
+        return True if callback is None else bool(callback(step, log_data, drv))
+
     driver.run(
         T=float(grid[-1]),
         out=tuple(loggers),
         obs=dict(observables),
         tstops=grid,
         show_progress=False,
-        callback=callback if callback is not None else (lambda *_: True),
+        callback=on_stop,
     )
     for logger in loggers[1:]:
         logger.flush()
@@ -149,7 +172,10 @@ def run_tdvp(
         imaginary[name] = float(np.max(np.abs(means.imag))) if means.size else 0.0
     if times is None:
         times = grid
-    return TDVPResult(times=times, observables=values, imaginary_parts=imaginary)
+    states = np.stack(recorded) if record_states else None
+    return TDVPResult(
+        times=times, observables=values, imaginary_parts=imaginary, states=states
+    )
 
 
 __all__ = ["TDVPResult", "TDVPSettings", "run_tdvp"]

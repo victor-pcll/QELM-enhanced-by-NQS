@@ -22,9 +22,9 @@
 | `src/QELM/NQS/seed.py` | Reads `seed` from the composed config |
 | `src/QELM/NQS/selection.py` | Loads `.env` and formats the selection line |
 | `data/` | Local datasets. Gitignored, and not created by the package |
-| `notebooks/00_outputs_starter.ipynb` | Loads the latest run of an experiment from the root `outputs/` |
-| `notebooks/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics, N=6, h=10, T=5 |
-| `notebooks/series.ipynb` | Plots a local `data/series.npy` into `outputs/series.png` |
+| `notebooks/results/00_outputs_starter.ipynb` | Loads the latest run of an experiment from the root `outputs/` |
+| `notebooks/results/01_tdvp_vs_ed_baseline.ipynb` | TDVP (RBM) vs exact dynamics: N=6 baseline, all observables, accumulated error vs h for N=4, 6, 8 |
+| `notebooks/benchmarks/01_tdvp_wall_time.ipynb` | TDVP wall time against N and h |
 | `tests/` | pytest |
 
 Import the library as `QELM.NQS`.
